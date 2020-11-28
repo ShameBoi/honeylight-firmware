@@ -13,7 +13,7 @@
  * @param s saturation, as a number between 0 and 255
  * @param v value, as a number between 0 and 255
  */
-color_t hsvToRgb(uint16_t const h, uint8_t const s, uint8_t const v) {
+color_t Util::hsvToRgb(uint16_t const h, uint8_t const s, uint8_t const v) {
     uint8_t const f = (h % 60) * 255 / 60;
     uint8_t const p = (255 - s) * v / 255;
     uint8_t const q = (255 - f * s / 255) * v / 255;

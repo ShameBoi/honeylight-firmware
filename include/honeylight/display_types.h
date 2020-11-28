@@ -10,6 +10,19 @@
 
 #include <honeylight/config.h>
 
+struct color_delta_t {
+    int16_t brightness;
+    int16_t blue;
+    int16_t green;
+    int16_t red;
+
+    color_delta_t() = default;
+
+    color_delta_t(int16_t const brightness, int16_t const red, int16_t const green, int16_t const blue)
+            : brightness(brightness), blue(blue), green(green), red(red) {}
+
+};
+
 struct [[gnu::packed]] color_t {
     unsigned brightness: 5;
     unsigned padding: 3;
@@ -20,39 +33,39 @@ struct [[gnu::packed]] color_t {
 
     color_t() = default;
 
-    color_t(uint8_t const brightness, uint8_t const blue, uint8_t const green, uint8_t const red)
+    color_t(uint8_t const brightness, uint8_t const red, uint8_t const green, uint8_t const blue)
             : brightness(brightness > HONEYLIGHT_MAX_BRIGHTNESS ? HONEYLIGHT_MAX_BRIGHTNESS : brightness),
-            padding(0b111U),
-            blue(blue),
-            green(green),
-            red(red) {}
-
-    color_t(uint8_t const blue, uint8_t const green, uint8_t const red)
-            : brightness(HONEYLIGHT_DEFAULT_BRIGHTNESS),
               padding(0b111U),
               blue(blue),
               green(green),
               red(red) {}
+
+    color_t(uint8_t const red, uint8_t const green, uint8_t const blue)
+            : color_t(HONEYLIGHT_DEFAULT_BRIGHTNESS, blue, green, red) {}
+
+    color_delta_t delta(color_t const &other) const;
+
+    color_t add(color_delta_t const &delta) const;
 };
 
 template<size_t RowLength>
 struct display_row_t {
 private:
     constexpr static size_t const endIndex = RowLength - 1;
-    color_t * const buffer;
+    color_t *const buffer;
 
 public:
     constexpr static inline size_t length() {
         return RowLength;
     }
 
-    explicit display_row_t(color_t * const buffer) : buffer(buffer) {}
+    explicit display_row_t(color_t *const buffer) : buffer(buffer) {}
 
-    inline color_t & operator[](size_t index) {
+    inline color_t &operator[](size_t index) {
         return buffer[index > endIndex ? endIndex : index];
     }
 
-    inline bool set(size_t index, color_t const & value) {
+    inline bool set(size_t index, color_t const &value) {
         if (index > endIndex) {
             return false;
         }
@@ -65,20 +78,20 @@ template<size_t RowLength>
 struct display_reversed_row_t {
 private:
     constexpr static size_t const endIndex = RowLength - 1;
-    color_t * const buffer;
+    color_t *const buffer;
 
 public:
     constexpr static inline size_t length() {
         return RowLength;
     }
 
-    explicit display_reversed_row_t(color_t * const buffer) : buffer(buffer) {}
+    explicit display_reversed_row_t(color_t *const buffer) : buffer(buffer) {}
 
-    inline color_t & operator[](size_t index) {
+    inline color_t &operator[](size_t index) {
         return buffer[endIndex - (index > endIndex ? endIndex : index)];
     }
 
-    inline bool set(size_t index, color_t const & value) {
+    inline bool set(size_t index, color_t const &value) {
         if (index > endIndex) {
             return false;
         }
@@ -88,7 +101,7 @@ public:
 
 };
 
-struct display_data_t {
+struct display_buffer_t {
 public:
     using RowA = display_row_t<14>;
     using RowB = display_reversed_row_t<15>;
@@ -112,7 +125,7 @@ private:
     RowE rowE = RowE(buffer + (RowA::length() + RowB::length() + RowC::length() + RowD::length()));
 
 public:
-    color_t & operator[](size_t index) {
+    color_t &operator[](size_t index) {
         if (index >= length) {
             index = length - 1;
         }
@@ -141,7 +154,7 @@ public:
         return rowE[index - cumulative];
     }
 
-    color_t & get(size_t rowNum, size_t const index) {
+    color_t &get(size_t rowNum, size_t const index) {
         if (rowNum > 4) {
             rowNum = 4;
         }
@@ -165,7 +178,7 @@ public:
         }
     }
 
-    bool set(size_t const rowNum, size_t const index, color_t const & val) {
+    bool set(size_t const rowNum, size_t const index, color_t const &val) {
         if (rowNum > 4) {
             return false;
         }
@@ -213,7 +226,25 @@ public:
         }
     }
 
-    color_t * getBuffer() {
+    inline color_t *getBuffer() {
         return buffer;
     }
+
+    color_t const *getConstBuffer() const {
+        return buffer;
+    }
+};
+
+struct frame_t {
+    uint32_t frameNumber = 0;
+    uint32_t transitionFrames = 0;
+    bool fadeNext = false;
+    display_buffer_t data;
+};
+
+struct [[gnu::packed]] rgba_t {
+    uint8_t red: 8;
+    uint8_t green: 8;
+    uint8_t blue: 8;
+    uint8_t alpha: 8;
 };

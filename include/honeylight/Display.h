@@ -13,13 +13,13 @@ class Display {
 private:
     SPIClass * const spi;
 
-    display_data_t bufferA = {};
+    display_buffer_t bufferA = {};
 
-    display_data_t bufferB = {};
+    display_buffer_t bufferB = {};
 
-    display_data_t * live = &bufferA;
+    display_buffer_t * live = &bufferA;
 
-    display_data_t * standby = &bufferB;
+    display_buffer_t * standby = &bufferB;
 
     void startDataFrame();
 
@@ -30,12 +30,12 @@ public:
     void end();
     void write();
 
-    inline display_data_t * getBuffer() {
+    inline display_buffer_t * getBuffer() {
         return standby;
     }
 
-    inline display_data_t * swap() {
-        display_data_t * oldLive = live;
+    inline display_buffer_t * swap() {
+        display_buffer_t * oldLive = live;
         live = standby;
         standby = oldLive;
         return oldLive;
