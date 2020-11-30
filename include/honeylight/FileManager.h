@@ -26,7 +26,8 @@ private:
     size_t patternIndex = 0;
     frame_t patternFrames[HONEYLIGHT_MAX_PATTERN_FRAMES];
     size_t patternFrameCount = 0;
-    uint8_t patternFileLoadBuff[16384] = {0};
+    uint8_t patternFileLoadBuff[HONEYLIGHT_IMAGE_BUFFER_SIZE] = {0};
+    uint8_t decodedFileBuff[HONEYLIGHT_IMAGE_BUFFER_SIZE] = {0};
 
     static bool hasExtension(File & file, char const * extension);
 

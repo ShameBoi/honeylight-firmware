@@ -22,5 +22,9 @@
 #define HONEYLIGHT_MAX_PATTERN_FRAMES (HONEYLIGHT_FPS * 3U)
 #endif
 
+#ifndef HONEYLIGHT_IMAGE_BUFFER_SIZE
+#define HONEYLIGHT_IMAGE_BUFFER_SIZE 16384
+#endif
+
 
 constexpr uint16_t const MillisecondsPerFrame = (1.0 / static_cast<float>(HONEYLIGHT_FPS)) * 1000U;

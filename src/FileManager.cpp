@@ -92,6 +92,8 @@ bool FileManager::parsePattern() {
     File curEntry;
     while ((curEntry = currentPattern.openNextFile()) && patternFrameCount < HONEYLIGHT_MAX_PATTERN_FRAMES) {
         if (!curEntry.isDirectory() && hasExtension(curEntry, PNG_EXTENSION)) {
+            Serial.print("Checking possible frame: ");
+            Serial.println(curEntry.name());
             processPossibleFrameFile(curEntry);
         }
         curEntry.close();
@@ -162,27 +164,38 @@ bool FileManager::processPossibleFrameFile(File & file) {
 }
 
 bool FileManager::parseFrame(File & entry, frame_t * const dest) {
+    Serial.print("Parsing frame file: ");
+    Serial.println(entry.name());
+
+    static uint8_t fileDecodeWorkBuff[HONEYLIGHT_IMAGE_BUFFER_SIZE] = {0};
     size_t readBytes = entry.read(patternFileLoadBuff, sizeof(patternFileLoadBuff));
     if (readBytes <= 0) {
         return false;
     }
 
-    unsigned char* image = nullptr;
+    Serial.print("Read bytes: ");
+    Serial.println(readBytes);
+    delay(10);
+
     unsigned width, height;
     unsigned error;
 
-    error = lodepng_decode32(&image, &width, &height, patternFileLoadBuff, readBytes);
+    error = lodepng_decode32(decodedFileBuff,
+                             sizeof(decodedFileBuff),
+                             fileDecodeWorkBuff,
+                             sizeof(fileDecodeWorkBuff),
+                             &width,
+                             &height,
+                             patternFileLoadBuff,
+                             readBytes);
 
     if (error) {
         Serial.print("Error decoding PNG: ");
         Serial.println(error);
-        if (image != nullptr) {
-            free(image);
-        }
         return false;
     }
 
-    auto * const castImage = reinterpret_cast<rgba_t *>(image);
+    auto * const castImage = reinterpret_cast<rgba_t *>(decodedFileBuff);
 
     for (size_t row = 0; row < 5; ++row) {
         size_t const rowXOffset = getXStartForRow(row);
@@ -193,7 +206,6 @@ bool FileManager::parseFrame(File & entry, frame_t * const dest) {
             pixelStartByte = (rowStart + (col * COLUMN_SPACING));
             if (pixelStartByte > (width * height * sizeof(rgba_t))) {
                 Serial.println("Calculated position larger than buffer");
-                free(image);
                 return false;
             }
             uint8_t const red = castImage[pixelStartByte].red;
@@ -205,7 +217,6 @@ bool FileManager::parseFrame(File & entry, frame_t * const dest) {
         }
     }
 
-    free(image);
     return true;
 }
 
