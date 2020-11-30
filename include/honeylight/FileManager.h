@@ -17,7 +17,7 @@
 class FileManager {
 private:
     constexpr static char const * const PATTERN_DIRECTORY = "/patterns";
-    constexpr static char const * const PNG_EXTENSION = ".PNG";
+    constexpr static char const * const BMP_EXTENSION = ".BMP";
     constexpr static size_t const COLUMN_SPACING = 6;
     constexpr static size_t const ROW_SPACING = 6;
 
@@ -26,12 +26,9 @@ private:
     size_t patternIndex = 0;
     frame_t patternFrames[HONEYLIGHT_MAX_PATTERN_FRAMES];
     size_t patternFrameCount = 0;
-    uint8_t patternFileLoadBuff[HONEYLIGHT_IMAGE_BUFFER_SIZE] = {0};
-    uint8_t decodedFileBuff[HONEYLIGHT_IMAGE_BUFFER_SIZE] = {0};
+    rgba_t decodedFileBuff[HONEYLIGHT_IMAGE_BUFFER_SIZE / sizeof(rgba_t)] = {};
 
     static bool hasExtension(File & file, char const * extension);
-
-    static uint8_t convertHexByte(char const * str);
 
     constexpr static uint8_t getXStartForRow(uint8_t const rowNumber) {
         switch (rowNumber) {

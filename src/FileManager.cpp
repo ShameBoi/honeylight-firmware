@@ -4,8 +4,8 @@
  * @author Shame Boi
  */
 
-#include <lodepng.h>
 #include <honeylight/FileManager.h>
+#include <honeylight/ImageReader.h>
 
 FileManager::FileManager() {
 
@@ -91,7 +91,7 @@ bool FileManager::parsePattern() {
     patternFrameCount = 0;
     File curEntry;
     while ((curEntry = currentPattern.openNextFile()) && patternFrameCount < HONEYLIGHT_MAX_PATTERN_FRAMES) {
-        if (!curEntry.isDirectory() && hasExtension(curEntry, PNG_EXTENSION)) {
+        if (!curEntry.isDirectory() && hasExtension(curEntry, BMP_EXTENSION)) {
             Serial.print("Checking possible frame: ");
             Serial.println(curEntry.name());
             processPossibleFrameFile(curEntry);
@@ -167,35 +167,15 @@ bool FileManager::parseFrame(File & entry, frame_t * const dest) {
     Serial.print("Parsing frame file: ");
     Serial.println(entry.name());
 
-    static uint8_t fileDecodeWorkBuff[HONEYLIGHT_IMAGE_BUFFER_SIZE] = {0};
-    size_t readBytes = entry.read(patternFileLoadBuff, sizeof(patternFileLoadBuff));
-    if (readBytes <= 0) {
-        return false;
-    }
-
-    Serial.print("Read bytes: ");
-    Serial.println(readBytes);
-    delay(10);
-
-    unsigned width, height;
+    size_t width, height;
     unsigned error;
 
-    error = lodepng_decode32(decodedFileBuff,
-                             sizeof(decodedFileBuff),
-                             fileDecodeWorkBuff,
-                             sizeof(fileDecodeWorkBuff),
-                             &width,
-                             &height,
-                             patternFileLoadBuff,
-                             readBytes);
+    static ImageReader imageReader;
 
-    if (error) {
-        Serial.print("Error decoding PNG: ");
-        Serial.println(error);
+    if (imageReader.readBMP(decodedFileBuff, sizeof(decodedFileBuff) / sizeof(*decodedFileBuff), &width, &height, entry)) {
+        Serial.print("Error decoding BMP");
         return false;
     }
-
-    auto * const castImage = reinterpret_cast<rgba_t *>(decodedFileBuff);
 
     for (size_t row = 0; row < 5; ++row) {
         size_t const rowXOffset = getXStartForRow(row);
@@ -208,22 +188,14 @@ bool FileManager::parseFrame(File & entry, frame_t * const dest) {
                 Serial.println("Calculated position larger than buffer");
                 return false;
             }
-            uint8_t const red = castImage[pixelStartByte].red;
-            uint8_t const green = castImage[pixelStartByte].green;
-            uint8_t const blue = castImage[pixelStartByte].blue;
-            uint8_t const alpha = castImage[pixelStartByte].alpha;
+            uint8_t const red = decodedFileBuff[pixelStartByte].red;
+            uint8_t const green = decodedFileBuff[pixelStartByte].green;
+            uint8_t const blue = decodedFileBuff[pixelStartByte].blue;
+            uint8_t const alpha = decodedFileBuff[pixelStartByte].alpha;
             uint8_t const brightness = (alpha / 255.0) * HONEYLIGHT_MAX_BRIGHTNESS;
             dest->data.set(row, col, color_t(brightness, red, green, blue));
         }
     }
 
     return true;
-}
-
-uint8_t FileManager::convertHexByte(char const *str) {
-    static char buff[3] = {0};
-
-    buff[0] = str[0];
-    buff[1] = str[1];
-    return strtoul(buff, nullptr, 16);
 }
