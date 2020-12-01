@@ -23,6 +23,8 @@ private:
         readBufferLen = 0;
     }
 
+    bool preLoadBuffer(File &file);
+
     uint8_t bufferedReadBytes(File & file, void * dest, size_t length);
 
 public:

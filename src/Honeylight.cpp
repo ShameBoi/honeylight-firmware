@@ -9,7 +9,7 @@
 
 #include <honeylight/Honeylight.h>
 
-Honeylight::Honeylight() : display(&SPI1), activeColors(display.getBuffer()) {
+Honeylight::Honeylight() : display(&SPI1), activeBuffer(display.getBuffer()) {
 
 }
 
@@ -22,6 +22,7 @@ void Honeylight::init() {
         }
     }
 
+    selectedPattern = &loadingBarPattern;
     display.begin();
     fileManager.begin();
     Serial.print("Found ");
@@ -30,7 +31,7 @@ void Honeylight::init() {
 }
 
 void Honeylight::loop() {
-    if (!errorWithPattern && !fileManager.isPatternLoaded()) {
+    if (!errorWithPattern && !filePattern.isPatternLoaded()) {
         errorWithPattern = !loadAndParsePattern();
     }
     renderFrame();
@@ -38,7 +39,7 @@ void Honeylight::loop() {
 }
 
 void Honeylight::write() {
-    activeColors = display.swap();
+    activeBuffer = display.swap();
     display.write();
 }
 
@@ -56,75 +57,21 @@ void Honeylight::writeFrame() {
 }
 
 void Honeylight::renderFrame() {
-    if (!errorWithPattern) {
-        errorWithPattern = !renderPatternFrame();
+    if (selectedPattern && !errorWithPattern) {
+        errorWithPattern = !selectedPattern->renderTo(activeBuffer);
     }
 
-    if (errorWithPattern) {
+    if (!selectedPattern || errorWithPattern) {
         renderTestPatternFrame();
     }
 }
 
 bool Honeylight::loadAndParsePattern() {
-    if (!fileManager.loadPattern(selectedPatternIndex)) {
+    if (!fileManager.loadPattern(selectedPatternIndex, &filePattern)) {
         return false;
     }
-    if (!fileManager.parsePattern()) {
-        return false;
-    }
+    selectedPattern = &filePattern;
     lastFrameMillis = millis();
-    return true;
-}
-
-bool Honeylight::renderPatternFrame() {
-    if (activePatternFrame == nullptr) {
-        activePatternFrame = fileManager.getPatternFrame(currentPatternFrame);
-    }
-
-
-    if (!activePatternFrame->fadeNext || fileManager.getPatternFrameCount() <= 1) {
-        memcpy(display.getBuffer(),
-               activePatternFrame->data.getConstBuffer(),
-               display_buffer_t::length * sizeof(color_t));
-    } else {
-        frame_t const * nextFrame;
-        if ((currentPatternFrame + 1) >= fileManager.getPatternFrameCount()) {
-            nextFrame = fileManager.getPatternFrame(0);
-        } else {
-            nextFrame = fileManager.getPatternFrame(currentPatternFrame + 1);
-        }
-        if (!renderFadeTransitionFrame(activePatternFrame, nextFrame, display.getBuffer())) {
-            return false;
-        }
-    }
-
-    ++currentTransitionFrame;
-    if (currentTransitionFrame > activePatternFrame->transitionFrames) {
-        currentTransitionFrame = 0;
-        currentPatternFrame++;
-        if (currentPatternFrame >= fileManager.getPatternFrameCount()) {
-            currentPatternFrame = 0;
-        }
-        activePatternFrame = fileManager.getPatternFrame(currentPatternFrame);
-    }
-    return true;
-}
-
-bool Honeylight::renderFadeTransitionFrame(frame_t const * fadeFromPatternFrame,
-                                           frame_t const * fadeToPatternFrame,
-                                           display_buffer_t * const dest) const {
-    float const percentFaded = static_cast<float>(currentTransitionFrame) /
-            static_cast<float>(fadeFromPatternFrame->transitionFrames);
-    for (size_t pixelIndex = 0; pixelIndex < display_buffer_t::length; ++pixelIndex) {
-        color_t const * fadeFrom = fadeFromPatternFrame->data.getConstBuffer() + pixelIndex;
-        color_t const * fadeTo = fadeToPatternFrame->data.getConstBuffer() + pixelIndex;
-        color_delta_t delta = fadeTo->delta(*fadeFrom);
-        delta.brightness *= percentFaded;
-        delta.red *= percentFaded;
-        delta.green *= percentFaded;
-        delta.blue *= percentFaded;
-        dest->getBuffer()[pixelIndex] = fadeFrom->add(delta);
-    }
     return true;
 }
 
@@ -136,7 +83,7 @@ void Honeylight::renderTestPatternFrame() {
         color_t color = Util::hsvToRgb((uint32_t)p * 359 / 256, 255, 255);
 
         for (uint8_t row = 0; row < 5; row++) {
-            activeColors->set(row, col, color);
+            activeBuffer->set(row, col, color);
         }
     }
 }

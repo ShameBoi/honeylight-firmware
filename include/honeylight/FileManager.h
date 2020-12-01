@@ -13,6 +13,7 @@
 
 #include <honeylight/config.h>
 #include <honeylight/display_types.h>
+#include <honeylight/FilePattern.h>
 
 class FileManager {
 private:
@@ -20,15 +21,6 @@ private:
     constexpr static char const * const BMP_EXTENSION = ".BMP";
     constexpr static size_t const COLUMN_SPACING = 6;
     constexpr static size_t const ROW_SPACING = 6;
-
-    File root;
-    File currentPattern;
-    size_t patternIndex = 0;
-    frame_t patternFrames[HONEYLIGHT_MAX_PATTERN_FRAMES];
-    size_t patternFrameCount = 0;
-    rgba_t decodedFileBuff[HONEYLIGHT_IMAGE_BUFFER_SIZE / sizeof(rgba_t)] = {};
-
-    static bool hasExtension(File & file, char const * extension);
 
     constexpr static uint8_t getXStartForRow(uint8_t const rowNumber) {
         switch (rowNumber) {
@@ -46,35 +38,32 @@ private:
         }
     }
 
+    static bool hasExtension(File & file, char const * extension);
+
+    File root;
+    bool patternCountLoaded = false;
+    size_t patternCount = 0;
+    size_t activePatternIndex = 0;
+    rgba_t decodedFileBuff[HONEYLIGHT_IMAGE_BUFFER_SIZE / sizeof(rgba_t)] = {};
+
     bool parseFrame(File & entry, frame_t * dest);
 
-    bool processPossibleFrameFile(File & file);
+    bool processPossibleFrameFile(File & file, FilePattern * dest);
+
+    bool parsePattern(File & pattern, FilePattern * dest);
 
 public:
-    FileManager();
-
-    void begin();
-
-    inline bool isPatternLoaded() const {
-        return patternFrameCount != 0;
-    }
-
-    inline size_t getPatternFrameCount() const {
-        return patternFrameCount;
-    }
-
-    inline frame_t const * getPatternFrame(size_t const frame) const {
-        if (frame >= patternFrameCount) {
-            return patternFrames + (patternFrameCount - 1);
-        }
-        return patternFrames + frame;
-    }
+    FileManager() = default;
 
     size_t getPatternCount();
 
-    bool loadPattern(size_t index);
+    inline size_t getActivePatternIndex() const {
+        return activePatternIndex;
+    }
 
-    bool parsePattern();
+    void begin();
+
+    bool loadPattern(size_t index, FilePattern * dest);
 };
 
 

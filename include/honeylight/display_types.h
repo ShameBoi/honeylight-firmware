@@ -23,6 +23,27 @@ struct color_delta_t {
 
 };
 
+
+struct [[gnu::packed]] rgba_t {
+    uint8_t red: 8;
+    uint8_t green: 8;
+    uint8_t blue: 8;
+    uint8_t alpha: 8;
+};
+
+struct [[gnu::packed]] bgra_t {
+    uint8_t blue: 8;
+    uint8_t green: 8;
+    uint8_t red: 8;
+    uint8_t alpha: 8;
+};
+
+struct [[gnu::packed]] bgr_t {
+    uint8_t blue: 8;
+    uint8_t green: 8;
+    uint8_t red: 8;
+};
+
 struct [[gnu::packed]] color_t {
     unsigned brightness: 5;
     unsigned padding: 3;
@@ -42,6 +63,9 @@ struct [[gnu::packed]] color_t {
 
     color_t(uint8_t const red, uint8_t const green, uint8_t const blue)
             : color_t(HONEYLIGHT_DEFAULT_BRIGHTNESS, blue, green, red) {}
+
+    explicit color_t(rgba_t const & rgba)
+        : color_t((rgba.alpha / 255.0) * HONEYLIGHT_MAX_BRIGHTNESS, rgba.red, rgba.green, rgba.blue) {}
 
     color_delta_t delta(color_t const &other) const;
 
@@ -202,6 +226,16 @@ public:
         }
     }
 
+    void setAll(rgba_t const &val) {
+        setAll(color_t(val));
+    }
+
+    void setAll(color_t const &val) {
+        for(auto & iter : buffer) {
+            iter = val;
+        }
+    }
+
     constexpr static size_t getRowLength(size_t rowNum) {
         if (rowNum > 4) {
             rowNum = 4;
@@ -240,25 +274,5 @@ struct frame_t {
     uint32_t transitionFrames = 0;
     bool fadeNext = false;
     display_buffer_t data;
-};
-
-struct [[gnu::packed]] rgba_t {
-    uint8_t red: 8;
-    uint8_t green: 8;
-    uint8_t blue: 8;
-    uint8_t alpha: 8;
-};
-
-struct [[gnu::packed]] bgra_t {
-    uint8_t blue: 8;
-    uint8_t green: 8;
-    uint8_t red: 8;
-    uint8_t alpha: 8;
-};
-
-struct [[gnu::packed]] bgr_t {
-    uint8_t blue: 8;
-    uint8_t green: 8;
-    uint8_t red: 8;
 };
 

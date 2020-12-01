@@ -7,10 +7,6 @@
 #include <honeylight/FileManager.h>
 #include <honeylight/ImageReader.h>
 
-FileManager::FileManager() {
-
-}
-
 void FileManager::begin() {
     if (!SD.begin(BUILTIN_SDCARD)) {
         return;
@@ -22,21 +18,23 @@ void FileManager::begin() {
 }
 
 size_t FileManager::getPatternCount() {
-    if (!root) {
-        return 0;
-    }
-
-    size_t count = 0;
-
-    File curEntry;
-    while ((curEntry = root.openNextFile())) {
-        if (curEntry.isDirectory()) {
-            ++count;
+    if (!patternCountLoaded) {
+        if (!root) {
+            return 0;
         }
-        curEntry.close();
+
+        patternCount = 0;
+        File curEntry;
+        while ((curEntry = root.openNextFile())) {
+            if (curEntry.isDirectory()) {
+                ++patternCount;
+            }
+            curEntry.close();
+        }
+        root.rewindDirectory();
+        patternCountLoaded = true;
     }
-    root.rewindDirectory();
-    return count;
+    return patternCount;
 }
 
 bool FileManager::hasExtension(File & file, char const *const extension) {
@@ -49,117 +47,151 @@ bool FileManager::hasExtension(File & file, char const *const extension) {
     return strncmp(name + (nameLength - extensionLength), extension, extensionLength) == 0;
 }
 
-bool FileManager::loadPattern(size_t const index) {
+bool FileManager::loadPattern(size_t const index, FilePattern * const dest) {
     if (!root) {
         return false;
     }
 
-    if (currentPattern) {
-        currentPattern.close();
-    }
-
-
     Serial.print("Loading pattern ");
     Serial.println(index);
 
+    bool found = false;
     size_t count = 0;
-    File curEntry;
-    while ((curEntry = root.openNextFile())) {
+    File currentPattern;
+    while ((currentPattern = root.openNextFile())) {
         Serial.print("Checking: ");
-        Serial.println(curEntry.name());
-        if (curEntry.isDirectory()) {
+        Serial.println(currentPattern.name());
+        if (currentPattern.isDirectory()) {
             if (index == count) {
-                patternIndex = index;
-                currentPattern = curEntry;
-                Serial.print("Loaded pattern: ");
-                Serial.println(currentPattern.name());
-                root.rewindDirectory();
-                return true;
+                activePatternIndex = index;
+                found = true;
+                break;
             }
             ++count;
         }
-        curEntry.close();
+        currentPattern.close();
     }
+
+    bool result = false;
+    if (found) {
+        Serial.print("Loaded pattern: ");
+        Serial.println(currentPattern.name());
+        result = parsePattern(currentPattern, dest);
+    }
+
+    currentPattern.close();
     root.rewindDirectory();
-    return false;
+    return result;
 }
 
-bool FileManager::parsePattern() {
-    if (!currentPattern) {
+bool FileManager::parsePattern(File & pattern, FilePattern * const dest) {
+    if (!pattern) {
         return false;
     }
-    patternFrameCount = 0;
+    dest->setPatternFrameCount(0);
     File curEntry;
-    while ((curEntry = currentPattern.openNextFile()) && patternFrameCount < HONEYLIGHT_MAX_PATTERN_FRAMES) {
+    while ((curEntry = pattern.openNextFile()) && dest->getPatternFrameCount() < HONEYLIGHT_MAX_PATTERN_FRAMES) {
         if (!curEntry.isDirectory() && hasExtension(curEntry, BMP_EXTENSION)) {
             Serial.print("Checking possible frame: ");
             Serial.println(curEntry.name());
-            processPossibleFrameFile(curEntry);
+            processPossibleFrameFile(curEntry, dest);
         }
         curEntry.close();
     }
     Serial.print("Loaded ");
-    Serial.print(patternFrameCount);
+    Serial.print(dest->getPatternFrameCount());
     Serial.println(" frames.");
     return true;
 }
 
 
-bool FileManager::processPossibleFrameFile(File & file) {
-    String entryName = String(file.name());
-    size_t const underscoreIndex = entryName.indexOf('_');
-    if (underscoreIndex <= 0) {
+bool FileManager::processPossibleFrameFile(File & file, FilePattern * const dest) {
+    char const * entryName = file.name();
+
+    char const * underscorePos = strchr(entryName, '_');
+    if (!underscorePos) {
         Serial.print("Bad name for frame: ");
         Serial.println(entryName);
         return false;
     }
 
-    size_t const periodIndex = entryName.lastIndexOf('.');
-    if (periodIndex <= 0 || periodIndex < underscoreIndex) {
+    char const * periodPos = strchr(underscorePos, '.');
+    if (!periodPos) {
         Serial.print("Bad name for frame: ");
         Serial.println(entryName);
         return false;
     }
 
-    String frameNumberString = entryName.substring(0, underscoreIndex);
-    String transitionString = entryName.substring(underscoreIndex + 1, periodIndex);
-    uint32_t const frameIndex = strtoul(frameNumberString.c_str(), nullptr, 10) - 1;
+    static char parseBuffer[5] = {0};
+
+    size_t const framePartLen = underscorePos - entryName;
+    if (framePartLen <= 0 || framePartLen > 3) {
+        Serial.print("Bad name for frame: ");
+        Serial.println(entryName);
+        return false;
+    }
+
+    strncpy(parseBuffer, entryName, framePartLen);
+    parseBuffer[framePartLen] = '\0';
+    uint32_t const frameIndex = strtoul(parseBuffer, nullptr, 10) - 1;
     if (frameIndex >= HONEYLIGHT_MAX_PATTERN_FRAMES) {
         Serial.print("Too many frames, discarding: ");
         Serial.println(entryName);
         return false;
     }
 
-    bool const isFadeNext = transitionString.endsWith('F');
-    if (isFadeNext) {
-        transitionString.remove(transitionString.length() - 1);
-    }
-
-    if (transitionString.length() < 1) {
+    underscorePos++;
+    size_t const periodPartLen = periodPos - underscorePos;
+    if (periodPartLen <= 0 || periodPartLen > 4) {
         Serial.print("Bad name for frame: ");
         Serial.println(entryName);
         return false;
     }
 
-    uint32_t const transitionFrames = strtoul(transitionString.c_str(), nullptr, 10);
+    bool const isFadeNext = underscorePos[periodPartLen - 1] == 'F';
+    if (isFadeNext) {
+        if ((periodPartLen - 1) <= 0) {
+            Serial.print("Bad name for frame: ");
+            Serial.println(entryName);
+            return false;
+        }
+        strncpy(parseBuffer, underscorePos, periodPartLen - 1);
+        parseBuffer[periodPartLen - 1] = '\0';
+    } else {
+        strncpy(parseBuffer, underscorePos, periodPartLen);
+        parseBuffer[periodPartLen] = '\0';
+    }
 
-    frame_t & frame = patternFrames[frameIndex];
-    frame.frameNumber = frameIndex + 1;
-    frame.transitionFrames = transitionFrames;
-    frame.fadeNext = isFadeNext;
+    uint32_t const transitionFrames = strtoul(parseBuffer, nullptr, 10);
 
-    if (!parseFrame(file, &frame)) {
+    frame_t * const frame = dest->getPatternFrame(frameIndex);
+    if (frame == nullptr) {
+        return false;
+    }
+
+    frame->frameNumber = frameIndex + 1;
+    frame->transitionFrames = transitionFrames;
+    frame->fadeNext = isFadeNext;
+
+    if (!parseFrame(file, frame)) {
         Serial.print("Error loading frame: ");
         Serial.println(entryName);
         return false;
     }
 
-    if (frameIndex >= patternFrameCount) {
-        patternFrameCount = frameIndex + 1;
+    if (frameIndex >= dest->getPatternFrameCount()) {
+        dest->setPatternFrameCount(frameIndex + 1);
     }
 
     Serial.print("Loaded frame: ");
-    Serial.println(entryName);
+    Serial.print(entryName);
+    Serial.print(" - { ");
+    Serial.print(frame->frameNumber);
+    Serial.print(", ");
+    Serial.print(frame->transitionFrames);
+    Serial.print(", ");
+    Serial.print(frame->fadeNext ? 'F' : 'N');
+    Serial.println(" }");
     return true;
 }
 
@@ -168,8 +200,6 @@ bool FileManager::parseFrame(File & entry, frame_t * const dest) {
     Serial.println(entry.name());
 
     size_t width, height;
-    unsigned error;
-
     static ImageReader imageReader;
 
     if (imageReader.readBMP(decodedFileBuff, sizeof(decodedFileBuff) / sizeof(*decodedFileBuff), &width, &height, entry)) {
@@ -177,6 +207,7 @@ bool FileManager::parseFrame(File & entry, frame_t * const dest) {
         return false;
     }
 
+    Serial.print("Remapping pixels...");
     for (size_t row = 0; row < 5; ++row) {
         size_t const rowXOffset = getXStartForRow(row);
         size_t const rowYOffset = row * ROW_SPACING;
@@ -188,6 +219,7 @@ bool FileManager::parseFrame(File & entry, frame_t * const dest) {
                 Serial.println("Calculated position larger than buffer");
                 return false;
             }
+
             uint8_t const red = decodedFileBuff[pixelStartByte].red;
             uint8_t const green = decodedFileBuff[pixelStartByte].green;
             uint8_t const blue = decodedFileBuff[pixelStartByte].blue;
@@ -196,6 +228,8 @@ bool FileManager::parseFrame(File & entry, frame_t * const dest) {
             dest->data.set(row, col, color_t(brightness, red, green, blue));
         }
     }
+
+    Serial.println(" Done.");
 
     return true;
 }
