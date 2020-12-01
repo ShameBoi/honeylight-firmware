@@ -6,20 +6,36 @@
 
 #include <Arduino.h>
 #include <honeylight/ImageReader.h>
+#include <honeylight/util.h>
 
 static constexpr uint8_t const BMP_HEADER_MIN_SIZE = 54U;
 
-uint8_t ImageReader::bufferedReadByte(File & file, uint8_t * errorCode) {
-    if (readBufferPos >= readBufferLen) {
-        readBufferLen = file.readBytes(readBuffer, sizeof(readBuffer));
-        if (readBufferLen <= 0) {
-            Serial.println("Premature end of file");
-            *errorCode = 1;
-            return 0;
+uint8_t ImageReader::bufferedReadBytes(File &file, void * dest, size_t length) {
+    size_t writePos = 0;
+    size_t remainingBuffer, amountToCopy;
+
+    while (length > 0) {
+        remainingBuffer = readBufferLen - readBufferPos;
+        amountToCopy = Util::min(remainingBuffer, length);
+
+        if (amountToCopy > 0) {
+            memcpy(reinterpret_cast<char *>(dest) + writePos, readBuffer + readBufferPos, amountToCopy);
+            writePos += amountToCopy;
+            length -= amountToCopy;
+            readBufferPos += amountToCopy;
         }
-        readBufferPos = 0;
+
+        if (length > 0) {
+            readBufferLen = file.readBytes(readBuffer, sizeof(readBuffer));
+            if (readBufferLen <= 0) {
+                Serial.println("Premature end of file");
+                return 1;
+            }
+            readBufferPos = 0;
+        }
     }
-    return readBuffer[readBufferPos++];
+
+    return 0;
 }
 
 unsigned ImageReader::readBMP(rgba_t * const imageData,
@@ -88,50 +104,33 @@ unsigned ImageReader::readBMP(rgba_t * const imageData,
 
             // BMP is either BGR or BGRA, so we have to reorder the bytes
             if (numChannels == 3) {
-                imageData[newpos].blue = bufferedReadByte(file, &error);
-                if (error) {
+                bgr_t pixel;
+                if (bufferedReadBytes(file, &pixel, sizeof(bgr_t)) != 0) {
                     return -1;
                 }
-                imageData[newpos].green = bufferedReadByte(file, &error);
-                if (error) {
-                    return -1;
-                }
-                imageData[newpos].red = bufferedReadByte(file, &error);
-                if (error) {
-                    return -1;
-                }
+                imageData[newpos].blue = pixel.blue;
+                imageData[newpos].green = pixel.green;
+                imageData[newpos].red = pixel.red;
                 imageData[newpos].alpha = 0xFFU;
             } else {
-                imageData[newpos].blue = bufferedReadByte(file, &error);
-                if (error) {
+                bgra_t pixel;
+                if (bufferedReadBytes(file, &pixel, sizeof(bgra_t)) != 0) {
                     return -1;
                 }
-                imageData[newpos].green = bufferedReadByte(file, &error);
-                if (error) {
-                    return -1;
-                }
-                imageData[newpos].red = bufferedReadByte(file, &error);
-                if (error) {
-                    return -1;
-                }
-                imageData[newpos].alpha = bufferedReadByte(file, &error);
-                if (error) {
-                    return -1;
-                }
+                imageData[newpos].blue = pixel.blue;
+                imageData[newpos].green = pixel.green;
+                imageData[newpos].red = pixel.red;
+                imageData[newpos].alpha = pixel.alpha;
             }
             bytesReadThisLine += numChannels;
         }
 
         // BMP pads out any row that isn't a multiple of 4
         uint8_t missingPadding = 4 - (bytesReadThisLine % 4);
-        if (missingPadding != 4) {
-            while (missingPadding) {
-                bufferedReadByte(file, &error);
-                if (error) {
-                    return -1;
-                }
-                ++bytesReadThisLine;
-                --missingPadding;
+        if (missingPadding < 4) {
+            uint8_t discard[3] = {0};
+            if (bufferedReadBytes(file, discard, missingPadding) != 0) {
+                return -1;
             }
         }
     }

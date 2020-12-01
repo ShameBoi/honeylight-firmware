@@ -28,3 +28,4 @@
 
 
 constexpr uint16_t const MillisecondsPerFrame = (1.0 / static_cast<float>(HONEYLIGHT_FPS)) * 1000U;
+

@@ -255,3 +255,10 @@ struct [[gnu::packed]] bgra_t {
     uint8_t red: 8;
     uint8_t alpha: 8;
 };
+
+struct [[gnu::packed]] bgr_t {
+    uint8_t blue: 8;
+    uint8_t green: 8;
+    uint8_t red: 8;
+};
+

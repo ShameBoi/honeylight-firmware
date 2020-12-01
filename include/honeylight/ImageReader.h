@@ -14,7 +14,7 @@
 
 class ImageReader {
 private:
-    char readBuffer[512] = {0};
+    char readBuffer[2048] = {0};
     size_t readBufferPos = 0;
     size_t readBufferLen = 0;
 
@@ -23,7 +23,7 @@ private:
         readBufferLen = 0;
     }
 
-    uint8_t bufferedReadByte(File & file, uint8_t * errorCode);
+    uint8_t bufferedReadBytes(File & file, void * dest, size_t length);
 
 public:
     size_t readBMP(rgba_t * imageData,

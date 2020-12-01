@@ -22,4 +22,14 @@ public:
             return static_cast<UIntType>(tempResult);
         }
     }
+
+    template<typename IntType>
+    inline static IntType min(IntType const valueOne, IntType const valueTwo) {
+        return valueOne > valueTwo ? valueTwo : valueOne;
+    }
+
+    template<typename IntType>
+    inline static IntType max(IntType const valueOne, IntType const valueTwo) {
+        return valueOne < valueTwo ? valueTwo : valueOne;
+    }
 };
