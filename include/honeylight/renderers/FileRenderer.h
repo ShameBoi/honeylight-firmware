@@ -26,6 +26,12 @@ public:
 
     ~FileRenderer() override = default;
 
+    inline void reset() {
+        currentPatternFrame = 0;
+        currentTransitionFrame = 0;
+        activePatternFrame = nullptr;
+    }
+
     inline bool isPatternLoaded() const {
         return patternFrameCount != 0;
     }

@@ -45,6 +45,7 @@ public:
     }
 
     inline void showFileRenderer() {
+        fileRenderer.reset();
         showRenderer(&fileRenderer);
     }
 
