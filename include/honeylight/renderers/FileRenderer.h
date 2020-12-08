@@ -1,5 +1,5 @@
 /**
- * FilePattern.h
+ * FileRenderer.h
  *
  * @author Shame Boi
  */
@@ -9,9 +9,9 @@
 #include <cstddef>
 
 #include <honeylight/display_types.h>
-#include <honeylight/Pattern.h>
+#include <honeylight/renderers/Renderer.h>
 
-class FilePattern : public Pattern {
+class FileRenderer : public Renderer {
 private:
     uint32_t currentPatternFrame = 0;
     uint32_t currentTransitionFrame = 0;
@@ -24,7 +24,7 @@ private:
                                    display_buffer_t * dest) const;
 public:
 
-    ~FilePattern() override = default;
+    ~FileRenderer() override = default;
 
     inline bool isPatternLoaded() const {
         return patternFrameCount != 0;
@@ -46,6 +46,10 @@ public:
     }
 
     bool renderTo(display_buffer_t *buffer) override;
+
+    const char *getName() const override {
+        return "File";
+    }
 };
 
 

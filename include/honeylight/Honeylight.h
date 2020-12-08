@@ -11,32 +11,21 @@
 #include <honeylight/config.h>
 #include <honeylight/util.h>
 #include <honeylight/display_types.h>
-#include <honeylight/Display.h>
-#include <honeylight/FileManager.h>
-#include <honeylight/FilePattern.h>
-#include "LoadingBarPattern.h"
+#include <honeylight/managers/RendererManager.h>
+#include <honeylight/managers/FileManager.h>
+#include <honeylight/renderers/FileRenderer.h>
+#include <honeylight/renderers/LoadingBarRenderer.h>
+#include <honeylight/renderers/RainbowRenderer.h>
+#include <honeylight/managers/UIManager.h>
 
 class Honeylight {
 private:
-    Display display;
+    RendererManager rendererManager;
     FileManager fileManager;
-    FilePattern filePattern;
-    LoadingBarPattern loadingBarPattern;
-
-    Pattern * selectedPattern = nullptr;
-    display_buffer_t * activeBuffer;
-    uint32_t lastFrameMillis = 0;
-    uint32_t selectedPatternIndex = 0;
-    bool errorWithPattern = false;
-
-    void write();
-    void writeFrame();
-    void renderFrame();
-    bool loadAndParsePattern();
-    void renderTestPatternFrame();
+    UIManager uiManager;
 
 public:
-    Honeylight();
+    Honeylight() : rendererManager(), fileManager(rendererManager), uiManager(fileManager, rendererManager) {};
 
     void init();
 

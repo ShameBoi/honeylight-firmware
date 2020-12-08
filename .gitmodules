@@ -1,0 +1,6 @@
+[submodule "lib/SD"]
+	path = lib/SD
+	url = https://github.com/PaulStoffregen/SD.git
+[submodule "lib/SdFat"]
+	path = lib/SdFat
+	url = https://github.com/PaulStoffregen/SdFat-beta.git

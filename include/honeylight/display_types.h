@@ -54,14 +54,14 @@ struct [[gnu::packed]] color_t {
 
     color_t() = default;
 
-    color_t(uint8_t const brightness, uint8_t const red, uint8_t const green, uint8_t const blue)
+    constexpr color_t(uint8_t const brightness, uint8_t const red, uint8_t const green, uint8_t const blue)
             : brightness(brightness > HONEYLIGHT_MAX_BRIGHTNESS ? HONEYLIGHT_MAX_BRIGHTNESS : brightness),
               padding(0b111U),
               blue(blue),
               green(green),
               red(red) {}
 
-    color_t(uint8_t const red, uint8_t const green, uint8_t const blue)
+    constexpr color_t(uint8_t const red, uint8_t const green, uint8_t const blue)
             : color_t(HONEYLIGHT_DEFAULT_BRIGHTNESS, blue, green, red) {}
 
     explicit color_t(rgba_t const & rgba)
@@ -276,3 +276,11 @@ struct frame_t {
     display_buffer_t data;
 };
 
+namespace Color {
+    constexpr static color_t const White = color_t(0xFF, 0xFF, 0xFF);
+    constexpr static color_t const Black = color_t(0x00, 0x00, 0x00);
+    constexpr static color_t const Red = color_t(0xFF, 0x00, 0x00);
+    constexpr static color_t const Green = color_t(0x00, 0xFF, 0x00);
+    constexpr static color_t const Blue = color_t(0x00, 0x00, 0xFF);
+    constexpr static color_t const Purple = color_t(0x7F, 0x00, 0x7F);
+}

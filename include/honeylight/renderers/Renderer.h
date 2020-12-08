@@ -1,5 +1,5 @@
 /**
- * Pattern.h
+ * Renderer.h
  *
  * @author Shame Boi
  */
@@ -8,11 +8,13 @@
 
 #include <honeylight/display_types.h>
 
-class Pattern {
+class Renderer {
 public:
-    Pattern() = default;
+    Renderer() = default;
 
-    virtual ~Pattern() = default;
+    virtual ~Renderer() = default;
+
+    virtual char const * getName() const = 0;
 
     virtual bool renderTo(display_buffer_t * buffer) = 0;
 };

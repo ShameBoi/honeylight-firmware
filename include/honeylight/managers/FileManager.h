@@ -13,12 +13,12 @@
 
 #include <honeylight/config.h>
 #include <honeylight/display_types.h>
-#include <honeylight/FilePattern.h>
+#include <honeylight/managers/RendererManager.h>
 
 class FileManager {
 private:
     constexpr static char const * const PATTERN_DIRECTORY = "/patterns";
-    constexpr static char const * const BMP_EXTENSION = ".BMP";
+    constexpr static char const * const BMP_EXTENSION = ".bmp";
     constexpr static size_t const COLUMN_SPACING = 6;
     constexpr static size_t const ROW_SPACING = 6;
 
@@ -40,20 +40,35 @@ private:
 
     static bool hasExtension(File & file, char const * extension);
 
+    enum class State {
+        Error = 0,
+        Idle,
+        LoadPattern,
+        ParsePattern
+    };
+
+    RendererManager * const rendererManager;
+    State state = State::Error;
     File root;
     bool patternCountLoaded = false;
+    bool patternLoaded = false;
     size_t patternCount = 0;
     size_t activePatternIndex = 0;
     rgba_t decodedFileBuff[HONEYLIGHT_IMAGE_BUFFER_SIZE / sizeof(rgba_t)] = {};
+    File patternToParse;
+    uint32_t loadStartMsec = 0;
+
+    State doLoadPattern();
+
+    State parsePattern();
 
     bool parseFrame(File & entry, frame_t * dest);
 
-    bool processPossibleFrameFile(File & file, FilePattern * dest);
+    bool processPossibleFrameFile(File & file);
 
-    bool parsePattern(File & pattern, FilePattern * dest);
 
 public:
-    FileManager() = default;
+    explicit FileManager(RendererManager & rendererManager) : rendererManager(&rendererManager) {};
 
     size_t getPatternCount();
 
@@ -63,7 +78,11 @@ public:
 
     void begin();
 
-    bool loadPattern(size_t index, FilePattern * dest);
+    bool hasWork();
+
+    void work();
+
+    bool loadPattern(size_t index);
 };
 
 

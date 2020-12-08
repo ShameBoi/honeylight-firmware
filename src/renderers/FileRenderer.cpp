@@ -1,13 +1,13 @@
 /**
- * FilePattern.cpp
+ * FileRenderer.cpp
  *
  * @author Shame Boi
  */
 
 #include <cstring>
-#include <honeylight/FilePattern.h>
+#include <honeylight/renderers/FileRenderer.h>
 
-bool FilePattern::renderTo(display_buffer_t * const buffer) {
+bool FileRenderer::renderTo(display_buffer_t * const buffer) {
     if (activePatternFrame == nullptr) {
         activePatternFrame = getPatternFrame(currentPatternFrame);
     }
@@ -40,9 +40,9 @@ bool FilePattern::renderTo(display_buffer_t * const buffer) {
     return true;
 }
 
-bool FilePattern::renderFadeTransitionFrame(frame_t const * const fadeFromPatternFrame,
-                                            frame_t const * const fadeToPatternFrame,
-                                            display_buffer_t * const dest) const {
+bool FileRenderer::renderFadeTransitionFrame(frame_t const * const fadeFromPatternFrame,
+                                             frame_t const * const fadeToPatternFrame,
+                                             display_buffer_t * const dest) const {
     float const percentFaded = static_cast<float>(currentTransitionFrame) /
                                static_cast<float>(fadeFromPatternFrame->transitionFrames);
     for (size_t pixelIndex = 0; pixelIndex < display_buffer_t::length; ++pixelIndex) {
