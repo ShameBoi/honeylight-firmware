@@ -62,7 +62,7 @@ struct [[gnu::packed]] color_t {
               red(red) {}
 
     constexpr color_t(uint8_t const red, uint8_t const green, uint8_t const blue)
-            : color_t(HONEYLIGHT_DEFAULT_BRIGHTNESS, blue, green, red) {}
+            : color_t(HONEYLIGHT_DEFAULT_BRIGHTNESS, red, green, blue) {}
 
     explicit color_t(rgba_t const & rgba)
         : color_t((rgba.alpha / 255.0) * HONEYLIGHT_MAX_BRIGHTNESS, rgba.red, rgba.green, rgba.blue) {}
@@ -149,7 +149,11 @@ private:
     RowE rowE = RowE(buffer + (RowA::length() + RowB::length() + RowC::length() + RowD::length()));
 
 public:
-    color_t &operator[](size_t index) {
+    inline color_t &operator[](size_t const index) {
+        return get(index);
+    }
+
+    color_t &get(size_t index) {
         if (index >= length) {
             index = length - 1;
         }
@@ -178,51 +182,59 @@ public:
         return rowE[index - cumulative];
     }
 
-    color_t &get(size_t rowNum, size_t const index) {
-        if (rowNum > 4) {
-            rowNum = 4;
+    color_t &get(size_t row, size_t const col) {
+        if (row > 4) {
+            row = 4;
         }
 
-        switch (rowNum) {
+        switch (row) {
             default:
             case 0:
-                return rowA[index];
+                return rowA[col];
 
             case 1:
-                return rowB[index];
+                return rowB[col];
 
             case 2:
-                return rowC[index];
+                return rowC[col];
 
             case 3:
-                return rowD[index];
+                return rowD[col];
 
             case 4:
-                return rowE[index];
+                return rowE[col];
         }
     }
 
-    bool set(size_t const rowNum, size_t const index, color_t const &val) {
-        if (rowNum > 4) {
+    bool set(size_t index, color_t const &color) {
+        if (index >= length) {
+            return false;
+        }
+        get(index) = color;
+        return true;
+    }
+
+    bool set(size_t const row, size_t const col, color_t const &val) {
+        if (row > 4) {
             return false;
         }
 
-        switch (rowNum) {
+        switch (row) {
             default:
             case 0:
-                return rowA.set(index, val);
+                return rowA.set(col, val);
 
             case 1:
-                return rowB.set(index, val);
+                return rowB.set(col, val);
 
             case 2:
-                return rowC.set(index, val);
+                return rowC.set(col, val);
 
             case 3:
-                return rowD.set(index, val);
+                return rowD.set(col, val);
 
             case 4:
-                return rowE.set(index, val);
+                return rowE.set(col, val);
         }
     }
 

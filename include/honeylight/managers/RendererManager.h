@@ -13,6 +13,8 @@
 #include <honeylight/renderers/LoadingBarRenderer.h>
 #include <honeylight/renderers/RainbowRenderer.h>
 #include <honeylight/renderers/BlankWhiteRenderer.h>
+#include <honeylight/renderers/MenuRenderer.h>
+#include <honeylight/renderers/FontTestRenderer.h>
 
 class RendererManager {
 private:
@@ -22,7 +24,10 @@ private:
     LoadingBarRenderer loadingBarRenderer;
     RainbowRenderer rainbowRenderer;
     BlankWhiteRenderer blankWhiteRenderer;
+    MenuRenderer menuRenderer;
+    FontTestRenderer fontTestRenderer;
 
+    Renderer * previousRenderer = nullptr;
     Renderer * selectedRenderer = nullptr;
     uint32_t lastFrameMillis = 0;
     bool errorWithRenderer = false;
@@ -44,6 +49,10 @@ public:
         return loadingBarRenderer;
     }
 
+    inline MenuRenderer & getMenuRenderer() {
+        return menuRenderer;
+    }
+
     inline void showFileRenderer() {
         fileRenderer.reset();
         showRenderer(&fileRenderer);
@@ -60,6 +69,16 @@ public:
     inline void showBlankWhiteRenderer() {
         showRenderer(&blankWhiteRenderer);
     }
+
+    inline void showMenuRenderer() {
+        showRenderer(&menuRenderer);
+    }
+
+    inline void showFontTestRenderer() {
+        showRenderer(&fontTestRenderer);
+    }
+
+    void showPreviousRenderer();
 
     void begin();
 

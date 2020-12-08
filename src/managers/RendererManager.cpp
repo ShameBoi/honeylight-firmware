@@ -47,7 +47,15 @@ void RendererManager::writeFrame() {
 }
 
 void RendererManager::showRenderer(Renderer * const renderer) {
+    previousRenderer = selectedRenderer;
     selectedRenderer = renderer;
     Serial.print("Selected Renderer: ");
     Serial.println(selectedRenderer->getName());
+}
+
+void RendererManager::showPreviousRenderer() {
+    if (previousRenderer == nullptr) {
+        return;
+    }
+    showRenderer(previousRenderer);
 }

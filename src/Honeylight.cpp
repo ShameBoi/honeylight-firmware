@@ -18,12 +18,12 @@ void Honeylight::init() {
         }
     }
     #endif
-    
+
     rendererManager.begin();
     fileManager.begin();
     uiManager.begin();
 
-    rendererManager.showRainbowRenderer();
+    rendererManager.showFontTestRenderer();
 }
 
 void Honeylight::loop() {

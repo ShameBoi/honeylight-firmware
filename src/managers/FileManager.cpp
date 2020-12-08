@@ -223,7 +223,7 @@ bool FileManager::parseFrame(File & entry, frame_t * const dest) {
     static ImageReader imageReader;
 
     if (imageReader.readBMP(decodedFileBuff, sizeof(decodedFileBuff) / sizeof(*decodedFileBuff), &width, &height, entry)) {
-        Serial.print("Error decoding BMP");
+        Serial.println("Error decoding BMP");
         return false;
     }
 

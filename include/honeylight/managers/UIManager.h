@@ -16,6 +16,7 @@
 class UIManager {
 private:
     constexpr static uint8_t const EncoderChannel = 1;
+    constexpr static uint32_t const InputTimeoutMS = 5000U;
 
     static UIManager *interruptContext;
 
@@ -31,6 +32,8 @@ private:
 
     int32_t previousKnobPosition = 0;
 
+    bool menuActive = false;
+
     bool buttonPressed = false;
 
     int32_t knobMoved = 0;
@@ -38,6 +41,22 @@ private:
     size_t menuIndex = 0;
 
     size_t menuLength = 0;
+
+    uint32_t lastInputMillis = 0;
+
+    void openMenu();
+
+    void reset();
+
+    inline bool hasMenuTimedOut() const {
+        return menuActive && (millis() - lastInputMillis) > InputTimeoutMS;
+    }
+
+    void handleButtonPressed();
+
+    void handleKnobMoved();
+
+    void handleMenuTimeout();
 
 public:
     explicit UIManager(FileManager &fileManager, RendererManager & rendererManager)
