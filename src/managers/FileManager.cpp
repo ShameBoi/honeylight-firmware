@@ -113,6 +113,7 @@ FileManager::State FileManager::doLoadPattern() {
     }
 
     Serial.println("Pattern not found!");
+    rendererManager->showRainbowRenderer();
     return State::Idle;
 }
 
