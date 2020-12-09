@@ -23,6 +23,7 @@ private:
 
     size_t charIndex = 0;
 
+    bool showingNumbers = false;
 
     Font::symbol_t const * curSymbol = nullptr;
 public:
@@ -33,10 +34,22 @@ public:
     bool renderTo(display_buffer_t * const buffer) override {
         if (curSymbol == nullptr || millis() - lastMillis > TimeToShowCharMS) {
             lastMillis = millis();
-            curSymbol = &Font::Alphabet[charIndex];
+            if (showingNumbers) {
+                curSymbol = &Font::Numerals[charIndex];
+            } else {
+                curSymbol = &Font::Alphabet[charIndex];
+            }
             ++charIndex;
-            if (charIndex >= (sizeof(Font::Alphabet) / sizeof(*Font::Alphabet))) {
-                charIndex = 0;
+            if (showingNumbers) {
+                if (charIndex >= (sizeof(Font::Numerals) / sizeof(*Font::Numerals))) {
+                    charIndex = 0;
+                    showingNumbers = false;
+                }
+            } else {
+                if (charIndex >= (sizeof(Font::Alphabet) / sizeof(*Font::Alphabet))) {
+                    charIndex = 0;
+                    showingNumbers = true;
+                }
             }
         }
 

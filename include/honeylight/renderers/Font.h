@@ -56,7 +56,9 @@ private:
         } row5;
     };
 
-    static symbol_t const Alphabet[28];
+    static symbol_t const Alphabet[26];
+
+    static symbol_t const Numerals[10];
 };
 
 

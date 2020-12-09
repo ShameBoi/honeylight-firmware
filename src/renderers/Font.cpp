@@ -93,15 +93,15 @@ Font::symbol_t const Font::Alphabet[] = {
         {
                 FirstRow_____(xx, xx, xx, xx, OO),
                 SecondRow__(xx, xx, xx, xx, OO, xx),
-                ThirdRow_(xx, OO, xx, xx, OO, xx, xx),
-                FourthRow__(OO, xx, xx, OO, xx, xx),
-                FifthRow_____(OO, OO, OO, xx, xx)
+                ThirdRow_(xx, xx, OO, xx, OO, xx, xx),
+                FourthRow__(xx, OO, xx, OO, xx, xx),
+                FifthRow_____(xx, OO, OO, xx, xx)
         },
         // K
         {
                 FirstRow_____(xx, xx, OO, xx, OO),
-                SecondRow__(xx, xx, OO, OO, OO, xx),
-                ThirdRow_(xx, xx, OO, OO, xx, xx, xx),
+                SecondRow__(xx, xx, OO, xx, OO, xx),
+                ThirdRow_(xx, xx, OO, OO, OO, xx, xx),
                 FourthRow__(xx, OO, xx, OO, xx, xx),
                 FifthRow_____(OO, xx, xx, OO, xx)
         },
@@ -224,13 +224,88 @@ Font::symbol_t const Font::Alphabet[] = {
                 ThirdRow_(xx, xx, xx, OO, xx, xx, xx),
                 FourthRow__(xx, xx, OO, xx, xx, xx),
                 FifthRow_____(xx, OO, OO, OO, xx)
-        },
-        // Blank
+        }
+};
+
+Font::symbol_t const Font::Numerals[] = {
+        // 0
         {
-                FirstRow_____(xx, xx, xx, xx, xx),
-                SecondRow__(xx, xx, xx, xx, xx, xx),
-                ThirdRow_(xx, xx, xx, xx, xx, xx, xx),
-                FourthRow__(xx, xx, xx, xx, xx, xx),
-                FifthRow_____(xx, xx, xx, xx, xx)
+                FirstRow_____(xx, OO, OO, OO, xx),
+                SecondRow__(xx, OO, xx, OO, OO, xx),
+                ThirdRow_(xx, OO, xx, OO, xx, OO, xx),
+                FourthRow__(xx, OO, OO, xx, OO, xx),
+                FifthRow_____(xx, OO, OO, OO, xx)
+        },
+        // 1
+        {
+                FirstRow_____(xx, xx, xx, OO, OO),
+                SecondRow__(xx, xx, xx, xx, OO, xx),
+                ThirdRow_(xx, xx, xx, xx, OO, xx, xx),
+                FourthRow__(xx, xx, xx, OO, xx, xx),
+                FifthRow_____(xx, OO, OO, OO, xx)
+        },
+        // 2
+        {
+                FirstRow_____(xx, OO, OO, xx, xx),
+                SecondRow__(xx, OO, xx, OO, xx, xx),
+                ThirdRow_(xx, xx, xx, OO, xx, xx, xx),
+                FourthRow__(xx, xx, OO, xx, xx, xx),
+                FifthRow_____(xx, OO, OO, OO, xx)
+        },
+        // 3
+        {
+                FirstRow_____(xx, OO, OO, OO, xx),
+                SecondRow__(xx, OO, xx, xx, OO, xx),
+                ThirdRow_(xx, xx, xx, OO, OO, xx, xx),
+                FourthRow__(xx, OO, xx, xx, OO, xx),
+                FifthRow_____(xx, OO, OO, OO, xx)
+        },
+        // 4
+        {
+                FirstRow_____(xx, xx, OO, xx, OO),
+                SecondRow__(xx, xx, OO, xx, OO, xx),
+                ThirdRow_(xx, xx, OO, OO, OO, xx, xx),
+                FourthRow__(xx, xx, xx, OO, xx, xx),
+                FifthRow_____(xx, xx, OO, xx, xx)
+        },
+        // 5
+        {
+                FirstRow_____(xx, xx, OO, OO, OO),
+                SecondRow__(xx, xx, OO, xx, xx, xx),
+                ThirdRow_(xx, xx, OO, OO, xx, xx, xx),
+                FourthRow__(xx, xx, xx, OO, xx, xx),
+                FifthRow_____(OO, OO, OO, xx, xx)
+        },
+        // 6
+        {
+                FirstRow_____(xx, OO, OO, OO, xx),
+                SecondRow__(xx, OO, xx, xx, xx, xx),
+                ThirdRow_(xx, OO, OO, OO, OO, xx, xx),
+                FourthRow__(xx, OO, xx, xx, OO, xx),
+                FifthRow_____(xx, OO, OO, OO, xx)
+        },
+        // 7
+        {
+                FirstRow_____(xx, OO, OO, OO, OO),
+                SecondRow__(xx, xx, xx, xx, OO, xx),
+                ThirdRow_(xx, xx, xx, xx, OO, xx, xx),
+                FourthRow__(xx, xx, xx, OO, xx, xx),
+                FifthRow_____(xx, xx, OO, xx, xx)
+        },
+        // 8
+        {
+                FirstRow_____(xx, OO, OO, OO, xx),
+                SecondRow__(xx, OO, xx, xx, OO, xx),
+                ThirdRow_(xx, xx, OO, OO, OO, xx, xx),
+                FourthRow__(xx, OO, xx, xx, OO, xx),
+                FifthRow_____(xx, OO, OO, OO, xx)
+        },
+        // 9
+        {
+                FirstRow_____(xx, OO, OO, OO, xx),
+                SecondRow__(xx, OO, xx, xx, OO, xx),
+                ThirdRow_(xx, xx, OO, OO, OO, xx, xx),
+                FourthRow__(xx, xx, xx, OO, xx, xx),
+                FifthRow_____(xx, xx, OO, xx, xx)
         }
 };
