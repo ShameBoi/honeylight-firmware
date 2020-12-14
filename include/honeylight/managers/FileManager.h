@@ -13,9 +13,10 @@
 
 #include <honeylight/config.h>
 #include <honeylight/display_types.h>
+#include <honeylight/managers/Manager.h>
 #include <honeylight/managers/RendererManager.h>
 
-class FileManager {
+class FileManager : public Manager {
 private:
     constexpr static char const * const PATTERN_DIRECTORY = "/patterns";
     constexpr static char const * const BMP_EXTENSION = ".bmp";
@@ -70,17 +71,19 @@ private:
 public:
     explicit FileManager(RendererManager & rendererManager) : rendererManager(&rendererManager) {};
 
+    ~FileManager() override = default;
+
     size_t getPatternCount();
 
     inline size_t getActivePatternIndex() const {
         return activePatternIndex;
     }
 
-    void begin();
+    void begin() override;
 
-    bool hasWork();
+    bool hasWork() override;
 
-    void work();
+    void work() override;
 
     bool loadPattern(size_t index);
 };

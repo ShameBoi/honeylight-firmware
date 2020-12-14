@@ -6,6 +6,7 @@
 
 #include <cstring>
 
+#include <honeylight/debug.h>
 #include <honeylight/ImageReader.h>
 #include <honeylight/managers/FileManager.h>
 
@@ -87,8 +88,8 @@ bool FileManager::loadPattern(size_t const index) {
 
 
 FileManager::State FileManager::doLoadPattern() {
-    Serial.print("Loading pattern ");
-    Serial.println(activePatternIndex);
+    DBG("Loading pattern ");
+    DBGLN(activePatternIndex);
 
     bool found = false;
     size_t count = 0;
@@ -112,7 +113,7 @@ FileManager::State FileManager::doLoadPattern() {
         return State::ParsePattern;
     }
 
-    Serial.println("Pattern not found!");
+    DBGLN("Pattern not found!");
     rendererManager->showRainbowRenderer();
     return State::Idle;
 }
@@ -137,14 +138,14 @@ FileManager::State FileManager::parsePattern() {
         patternToParse.close();
     }
     if (renderer.getPatternFrameCount() > 0) {
-        Serial.print("Loaded ");
-        Serial.print(renderer.getPatternFrameCount());
-        Serial.print(" frames in ");
-        Serial.print(millis() - loadStartMsec);
-        Serial.println("ms");
+        DBG("Loaded ");
+        DBG(renderer.getPatternFrameCount());
+        DBG(" frames in ");
+        DBG(millis() - loadStartMsec);
+        DBGLN("ms");
         rendererManager->showFileRenderer();
     } else {
-        Serial.println("Error: no valid frames loaded...");
+        DBGLN("Error: no valid frames loaded...");
         rendererManager->showRainbowRenderer();
     }
     return State::Idle;
@@ -166,23 +167,23 @@ bool FileManager::processPossibleFrameFile(File & file) {
     }
 
     if (frameNumber == 0) {
-        Serial.print("Frame number can't be zero, discarding: ");
-        Serial.println(entryName);
+        DBG("Frame number can't be zero, discarding: ");
+        DBGLN(entryName);
         return false;
     }
     if (frameNumber > HONEYLIGHT_MAX_PATTERN_FRAMES) {
-        Serial.print("Frame number ");
-        Serial.print(frameNumber);
-        Serial.print(" too large, discarding: ");
-        Serial.println(entryName);
+        DBG("Frame number ");
+        DBG(frameNumber);
+        DBG(" too large, discarding: ");
+        DBGLN(entryName);
         return false;
     }
 
     if (transitionFrames > HONEYLIGHT_MAX_TRANSITION_FRAMES) {
-        Serial.print("Transition frames ");
-        Serial.print(transitionFrames);
-        Serial.print(" too large, discarding: ");
-        Serial.println(entryName);
+        DBG("Transition frames ");
+        DBG(transitionFrames);
+        DBG(" too large, discarding: ");
+        DBGLN(entryName);
         return false;
     }
 
@@ -203,31 +204,31 @@ bool FileManager::processPossibleFrameFile(File & file) {
         renderer.setPatternFrameCount(frameNumber);
     }
 
-    Serial.print("Loaded frame: ");
-    Serial.print(entryName);
-    Serial.print(" - { ");
-    Serial.print(frame->frameNumber);
-    Serial.print(", ");
-    Serial.print(frame->transitionFrames);
-    Serial.print(", ");
-    Serial.print(frame->fadeNext ? 'F' : 'N');
-    Serial.println(" }");
+    DBG("Loaded frame: ");
+    DBG(entryName);
+    DBG(" - { ");
+    DBG(frame->frameNumber);
+    DBG(", ");
+    DBG(frame->transitionFrames);
+    DBG(", ");
+    DBG(frame->fadeNext ? 'F' : 'N');
+    DBGLN(" }");
     return true;
 }
 
 bool FileManager::parseFrame(File & entry, frame_t * const dest) {
-    Serial.print("Parsing frame file: ");
-    Serial.println(entry.name());
+    DBG("Parsing frame file: ");
+    DBGLN(entry.name());
 
     size_t width, height;
     static ImageReader imageReader;
 
     if (imageReader.readBMP(decodedFileBuff, sizeof(decodedFileBuff) / sizeof(*decodedFileBuff), &width, &height, entry)) {
-        Serial.println("Error decoding BMP");
+        DBGLN("Error decoding BMP");
         return false;
     }
 
-    Serial.print("Remapping pixels...");
+    DBG("Remapping pixels...");
     for (size_t row = 0; row < HONEYLIGHT_DISPLAY_ROWS; ++row) {
         size_t const rowXOffset = getXStartForRow(row);
         size_t const rowYOffset = row * ROW_SPACING;
@@ -236,7 +237,7 @@ bool FileManager::parseFrame(File & entry, frame_t * const dest) {
         for (size_t col = 0; col < display_buffer_t::getRowLength(row); ++col) {
             pixelStartByte = (rowStart + (col * COLUMN_SPACING));
             if (pixelStartByte > (width * height * sizeof(rgba_t))) {
-                Serial.println("Calculated position larger than buffer");
+                DBGLN("Calculated position larger than buffer");
                 return false;
             }
 
@@ -249,7 +250,7 @@ bool FileManager::parseFrame(File & entry, frame_t * const dest) {
         }
     }
 
-    Serial.println(" Done.");
+    DBGLN(" Done.");
 
     return true;
 }

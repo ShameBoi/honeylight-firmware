@@ -5,8 +5,9 @@
  */
 
 #include <Arduino.h>
-#include <honeylight/ImageReader.h>
+#include <honeylight/debug.h>
 #include <honeylight/util.h>
+#include <honeylight/ImageReader.h>
 
 static constexpr uint8_t const BMP_HEADER_MIN_SIZE = 54U;
 
@@ -28,7 +29,7 @@ uint8_t ImageReader::bufferedReadBytes(File &file, void * dest, size_t length) {
         if (length > 0) {
             readBufferLen = file.readBytes(readBuffer, sizeof(readBuffer));
             if (readBufferLen <= 0) {
-                Serial.println("Premature end of file");
+                DBGLN("Premature end of file");
                 return 1;
             }
             readBufferPos = 0;
@@ -44,7 +45,7 @@ unsigned ImageReader::readBMP(rgba_t * const imageData,
                               size_t * const height,
                               File & file) {
     if(file.size() < BMP_HEADER_MIN_SIZE) {
-        Serial.println("Malformed BMP: Too Small");
+        DBGLN("Malformed BMP: Too Small");
         return -1;
     }
 
@@ -53,12 +54,12 @@ unsigned ImageReader::readBMP(rgba_t * const imageData,
     size_t bytesRead = file.readBytes(headerBuffer, BMP_HEADER_MIN_SIZE);
 
     if (bytesRead < BMP_HEADER_MIN_SIZE) {
-        Serial.println("Error reading BMP");
+        DBGLN("Error reading BMP");
         return -1;
     }
 
     if(headerBuffer[0] != 'B' || headerBuffer[1] != 'M') {
-        Serial.println("Malformed BMP: No Magic");
+        DBGLN("Malformed BMP: No Magic");
         return -1;
     }
 
@@ -67,7 +68,7 @@ unsigned ImageReader::readBMP(rgba_t * const imageData,
     *height = headerBuffer[22] + headerBuffer[23] * 256;
 
     if(headerBuffer[28] != 24 && headerBuffer[28] != 32) {
-        Serial.println("Malformed BMP: Unsupported Channels");
+        DBGLN("Malformed BMP: Unsupported Channels");
         return -1;
     }
 
@@ -80,27 +81,27 @@ unsigned ImageReader::readBMP(rgba_t * const imageData,
 
     uint32_t const dataSize = scanlineBytes * (*height);
     if(file.size() < dataSize + pixelDataOffset) {
-        Serial.println("Malformed BMP: Too Small for Pixels");
+        DBGLN("Malformed BMP: Too Small for Pixels");
         return -1;
     }
 
     size_t const neededLength = (*width) * (*height);
 
     if (neededLength > imageDataLength) {
-        Serial.println("BMP Too Big for Output Buffer");
+        DBGLN("BMP Too Big for Output Buffer");
         return -1;
     }
 
     file.seek(pixelDataOffset);
     resetBuffer();
 
-    Serial.print("Loading BMP Data...");
+    DBG("Loading BMP Data...");
     if (!preLoadBuffer(file)) {
         return -1;
     }
-    Serial.println(" Done.");
+    DBGLN(" Done.");
 
-    Serial.print("Reading BMP Data...");
+    DBG("Reading BMP Data...");
     uint8_t error = 0;
     for(uint32_t y = 0; y < (*height); y++) {
         size_t bytesReadThisLine = 0;
@@ -142,14 +143,14 @@ unsigned ImageReader::readBMP(rgba_t * const imageData,
         }
     }
 
-    Serial.println(" Done.");
+    DBGLN(" Done.");
     return 0;
 }
 
 bool ImageReader::preLoadBuffer(File &file) {
     readBufferLen = file.readBytes(readBuffer, sizeof(readBuffer));
     if (readBufferLen <= 0) {
-        Serial.println("Premature end of file");
+        DBGLN("Premature end of file");
         return false;
     }
     readBufferPos = 0;

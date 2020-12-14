@@ -23,12 +23,19 @@ struct color_delta_t {
 
 };
 
-
 struct [[gnu::packed]] rgba_t {
     uint8_t red: 8;
     uint8_t green: 8;
     uint8_t blue: 8;
     uint8_t alpha: 8;
+
+    rgba_t() = default;
+
+    rgba_t(uint8_t const red, uint8_t const green, uint8_t const blue, uint8_t const alpha)
+            : red(red),
+              green(green),
+              blue(blue),
+              alpha(alpha) {}
 };
 
 struct [[gnu::packed]] bgra_t {
@@ -36,21 +43,36 @@ struct [[gnu::packed]] bgra_t {
     uint8_t green: 8;
     uint8_t red: 8;
     uint8_t alpha: 8;
+
+    bgra_t() = default;
+
+    bgra_t(uint8_t const blue, uint8_t const green, uint8_t const red, uint8_t const alpha)
+            : blue(blue),
+              green(green),
+              red(red),
+              alpha(alpha) {}
 };
 
 struct [[gnu::packed]] bgr_t {
     uint8_t blue: 8;
     uint8_t green: 8;
     uint8_t red: 8;
+
+    bgr_t() = default;
+
+    bgr_t(uint8_t const blue, uint8_t const green, uint8_t const red)
+            : blue(blue),
+              green(green),
+              red(red) {}
 };
 
 struct [[gnu::packed]] color_t {
     unsigned brightness: 5;
     unsigned padding: 3;
 
-    uint8_t blue;
-    uint8_t green;
-    uint8_t red;
+    uint8_t blue: 8;
+    uint8_t green: 8;
+    uint8_t red: 8;
 
     color_t() = default;
 
@@ -64,8 +86,8 @@ struct [[gnu::packed]] color_t {
     constexpr color_t(uint8_t const red, uint8_t const green, uint8_t const blue)
             : color_t(HONEYLIGHT_DEFAULT_BRIGHTNESS, red, green, blue) {}
 
-    explicit color_t(rgba_t const & rgba)
-        : color_t((rgba.alpha / 255.0) * HONEYLIGHT_MAX_BRIGHTNESS, rgba.red, rgba.green, rgba.blue) {}
+    explicit color_t(rgba_t const &rgba)
+            : color_t((rgba.alpha / 255.0) * HONEYLIGHT_MAX_BRIGHTNESS, rgba.red, rgba.green, rgba.blue) {}
 
     color_delta_t delta(color_t const &other) const;
 
@@ -243,7 +265,7 @@ public:
     }
 
     void setAll(color_t const &val) {
-        for(auto & iter : buffer) {
+        for (auto &iter : buffer) {
             iter = val;
         }
     }

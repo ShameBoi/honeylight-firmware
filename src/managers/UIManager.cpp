@@ -4,6 +4,7 @@
  * @author Shame Boi
  */
 
+#include <honeylight/debug.h>
 #include <honeylight/managers/UIManager.h>
 
 UIManager * UIManager::interruptContext = nullptr;
@@ -98,7 +99,7 @@ void UIManager::handleKnobMoved() {
 }
 
 void UIManager::handleMenuTimeout() {
-    Serial.println("Menu timeout");
+    DBGLN("Menu timeout");
     reset();
     rendererManager->showPreviousRenderer();
 }

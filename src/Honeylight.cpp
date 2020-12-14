@@ -9,14 +9,16 @@
 #include <honeylight/Honeylight.h>
 
 void Honeylight::init() {
+    #ifdef HONEYLIGHT_DEBUG
     Serial.begin(115200);
-    #if defined(HONEYLIGHT_STARTUP_WAIT) && defined(HONEYLIGHT_DEBUG)
+    #ifdef HONEYLIGHT_STARTUP_WAIT
     uint32_t const startMillis = millis();
     while (!Serial) {
         if (millis() - startMillis > 5000U) {
             break;
         }
     }
+    #endif
     #endif
 
     rendererManager.begin();
@@ -27,15 +29,9 @@ void Honeylight::init() {
 }
 
 void Honeylight::loop() {
-    if (uiManager.hasWork()) {
-        uiManager.work();
-    }
-
-    if (fileManager.hasWork()) {
-        fileManager.work();
-    }
-
-    if (rendererManager.hasWork()) {
-        rendererManager.work();
+    for (Manager * manager : managers) {
+        if (manager->hasWork()) {
+            manager->work();
+        }
     }
 }

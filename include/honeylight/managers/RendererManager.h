@@ -7,6 +7,7 @@
 
 #include <cstdint>
 
+#include <honeylight/managers/Manager.h>
 #include <honeylight/Display.h>
 #include <honeylight/renderers/Renderer.h>
 #include <honeylight/renderers/FileRenderer.h>
@@ -16,7 +17,16 @@
 #include <honeylight/renderers/MenuRenderer.h>
 #include <honeylight/renderers/FontTestRenderer.h>
 
-class RendererManager {
+enum class RendererType {
+    File,
+    LoadingBar,
+    Rainbow,
+    BlankWhite,
+    Menu,
+    FontTest
+};
+
+class RendererManager : public Manager {
 private:
     Display display;
 
@@ -29,6 +39,7 @@ private:
 
     Renderer * previousRenderer = nullptr;
     Renderer * selectedRenderer = nullptr;
+    Renderer * defaultRenderer = &blankWhiteRenderer;
     uint32_t lastFrameMillis = 0;
     bool errorWithRenderer = false;
 
@@ -40,6 +51,8 @@ private:
 
 public:
     RendererManager();
+
+    ~RendererManager() override = default;
 
     inline FileRenderer & getFileRenderer() {
         return fileRenderer;
@@ -78,13 +91,21 @@ public:
         showRenderer(&fontTestRenderer);
     }
 
+    inline void showDefaultRenderer() {
+        showRenderer(defaultRenderer);
+    }
+
+    void setDefaultRenderer(RendererType type);
+
+    void showRenderer(RendererType type);
+
     void showPreviousRenderer();
 
-    void begin();
+    void begin() override;
 
-    bool hasWork();
+    bool hasWork() override;
 
-    void work();
+    void work() override;
 };
 
 

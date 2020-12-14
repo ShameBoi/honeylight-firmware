@@ -11,9 +11,10 @@
 
 #include <honeylight/Pins.h>
 #include <honeylight/atomic.h>
+#include <honeylight/managers/Manager.h>
 #include <honeylight/managers/FileManager.h>
 
-class UIManager {
+class UIManager : public Manager {
 private:
     constexpr static uint8_t const EncoderChannel = 1;
     constexpr static uint32_t const InputTimeoutMS = 5000U;
@@ -59,17 +60,19 @@ private:
     void handleMenuTimeout();
 
 public:
-    explicit UIManager(FileManager &fileManager, RendererManager & rendererManager)
+    UIManager(FileManager &fileManager, RendererManager & rendererManager)
             : fileManager(&fileManager),
               rendererManager(&rendererManager),
               buttonFlag(true),
               knob(EncoderChannel, Pin::EncoderPhaseA, Pin::EncoderPhaseB) {}
 
-    void begin();
+    ~UIManager() override = default;
 
-    bool hasWork();
+    void begin() override;
 
-    void work();
+    bool hasWork() override;
+
+    void work() override;
 };
 
 
