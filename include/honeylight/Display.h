@@ -7,19 +7,19 @@
 
 #include <Arduino.h>
 #include <SPI.h>
-#include <honeylight/display_types.h>
+#include <honeylight/data/DisplayBuffer.h>
 
 class Display {
 private:
     SPIClass * const spi;
 
-    display_buffer_t bufferA = {};
+    DisplayBuffer bufferA = {};
 
-    display_buffer_t bufferB = {};
+    DisplayBuffer bufferB = {};
 
-    display_buffer_t * live = &bufferA;
+    DisplayBuffer * live = &bufferA;
 
-    display_buffer_t * standby = &bufferB;
+    DisplayBuffer * standby = &bufferB;
 
     void startDataFrame();
 
@@ -27,15 +27,17 @@ public:
     explicit Display(SPIClass * const spi) : spi(spi) {}
 
     void begin();
+
     void end();
+
     void write();
 
-    inline display_buffer_t * getBuffer() {
+    inline DisplayBuffer * getBuffer() {
         return standby;
     }
 
-    inline display_buffer_t * swap() {
-        display_buffer_t * oldLive = live;
+    inline DisplayBuffer * swap() {
+        DisplayBuffer * oldLive = live;
         live = standby;
         standby = oldLive;
         return oldLive;

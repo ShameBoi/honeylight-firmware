@@ -4,12 +4,64 @@
  * @author Shame Boi
  */
 
+#include <cctype>
+#include <honeylight/config.h>
 #include <honeylight/renderers/Font.h>
+
+bool Font::renderCharacter(char const character,
+                           color_t const &color,
+                           uint8_t const xOffset,
+                           DisplayBuffer *const buffer) {
+    if (xOffset >= (HONEYLIGHT_DISPLAY_COLS - SymbolWidth)) {
+        return false;
+    }
+    bool error = false;
+    symbol_t const & symbol = getSymbolFor(character, &error);
+    if (error) {
+        return false;
+    }
+
+    for (uint8_t rowIndex = 0; rowIndex < HONEYLIGHT_DISPLAY_ROWS; ++rowIndex) {
+        Row & row = buffer->atRow(rowIndex);
+        for (uint8_t colIndex = 0; colIndex < getSymbolRowWidth(rowIndex); ++colIndex) {
+            if (symbol.getRowBit(rowIndex, colIndex)) {
+                row[xOffset + colIndex] = color;
+            }
+        }
+    }
+
+    return true;
+}
+
+Font::symbol_t const & Font::getSymbolFor(char const character, bool * const error) {
+    if (isalpha(character)) {
+        auto const index = static_cast<uint8_t>(toupper(character) - 'A');
+        if (index >= (sizeof(Alphabet) / sizeof(*Alphabet))) {
+            *error = true;
+            return Blank;
+        }
+        *error = false;
+        return Alphabet[index];
+    } else if (isdigit(character)) {
+        auto const index = static_cast<uint8_t>(character - '0');
+        if (index >= (sizeof(Numerals) / sizeof(*Numerals))) {
+            *error = true;
+            return Blank;
+        }
+        *error = false;
+        return Numerals[index];
+    }
+    *error = true;
+    return Blank;
+}
+
+// == Font characters defined below ==
 
 // Defines that just map to true/false to make the designs a bit clearer
 #define OO true
 #define xx false
 
+// These just serve to align the row definitions the same way they're aligned on Honeylight
 #define FirstRow_____(valA, valB, valC, valD, valE) { valA, valB, valC, valD, valE }
 #define SecondRow__(valA, valB, valC, valD, valE, valF) { valA, valB, valC, valD, valE, valF }
 #define ThirdRow_(valA, valB, valC, valD, valE, valF, valG) { valA, valB, valC, valD, valE, valF, valG }
@@ -19,27 +71,27 @@
 Font::symbol_t const Font::Alphabet[] = {
         // A
         {
-            FirstRow_____(xx, xx, OO, xx, xx),
-            SecondRow__(xx, xx, OO, OO, xx, xx),
-            ThirdRow_(xx, xx, OO, xx, OO, xx, xx),
-            FourthRow__(xx, OO, OO, OO, OO, xx),
-            FifthRow_____(OO, xx, xx, xx, OO)
+                FirstRow_____(xx, xx, OO, xx, xx),
+                SecondRow__(xx, xx, OO, OO, xx, xx),
+                ThirdRow_(xx, xx, OO, xx, OO, xx, xx),
+                FourthRow__(xx, OO, OO, OO, OO, xx),
+                FifthRow_____(OO, xx, xx, xx, OO)
         },
         // B
         {
-            FirstRow_____(xx, xx, OO, OO, xx),
-            SecondRow__(xx, xx, OO, xx, OO, xx),
-            ThirdRow_(xx, xx, OO, OO, OO, xx, xx),
-            FourthRow__(xx, OO, xx, OO, xx, xx),
-            FifthRow_____(OO, OO, OO, xx, xx)
+                FirstRow_____(xx, xx, OO, OO, xx),
+                SecondRow__(xx, xx, OO, xx, OO, xx),
+                ThirdRow_(xx, xx, OO, OO, OO, xx, xx),
+                FourthRow__(xx, OO, xx, OO, xx, xx),
+                FifthRow_____(OO, OO, OO, xx, xx)
         },
         // C
         {
-            FirstRow_____(xx, OO, OO, OO, xx),
-            SecondRow__(xx, OO, xx, xx, xx, xx),
-            ThirdRow_(xx, OO, xx, xx, xx, xx, xx),
-            FourthRow__(xx, OO, xx, xx, xx, xx),
-            FifthRow_____(xx, OO, OO, OO, xx)
+                FirstRow_____(xx, OO, OO, OO, xx),
+                SecondRow__(xx, OO, xx, xx, xx, xx),
+                ThirdRow_(xx, OO, xx, xx, xx, xx, xx),
+                FourthRow__(xx, OO, xx, xx, xx, xx),
+                FifthRow_____(xx, OO, OO, OO, xx)
         },
         // D
         {
@@ -308,4 +360,12 @@ Font::symbol_t const Font::Numerals[] = {
                 FourthRow__(xx, xx, xx, OO, xx, xx),
                 FifthRow_____(xx, xx, OO, xx, xx)
         }
+};
+
+Font::symbol_t const Font::Blank = {
+        FirstRow_____(xx, xx, xx, xx, xx),
+        SecondRow__(xx, xx, xx, xx, xx, xx),
+        ThirdRow_(xx, xx, xx, xx, xx, xx, xx),
+        FourthRow__(xx, xx, xx, xx, xx, xx),
+        FifthRow_____(xx, xx, xx, xx, xx)
 };

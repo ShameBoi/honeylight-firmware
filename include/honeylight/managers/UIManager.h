@@ -18,6 +18,8 @@ class UIManager : public Manager {
 private:
     constexpr static uint8_t const EncoderChannel = 1;
     constexpr static uint32_t const InputTimeoutMS = 5000U;
+    constexpr static size_t const BuiltInPatternsMenuLength = 2;
+    constexpr static size_t const SettingsMenuLength = 0;
 
     static UIManager *interruptContext;
 
@@ -41,9 +43,15 @@ private:
 
     size_t menuIndex = 0;
 
-    size_t menuLength = 0;
+    size_t filePatternsMenuLength = 0;
 
     uint32_t lastInputMillis = 0;
+
+    enum class MenuSection {
+        FilePatterns,
+        BuiltIn,
+        Settings
+    } menuSection = MenuSection::FilePatterns;
 
     void openMenu();
 
@@ -58,6 +66,12 @@ private:
     void handleKnobMoved();
 
     void handleMenuTimeout();
+
+    char getCharForMenuEntry() const;
+
+    inline size_t getTotalMenuLength() const {
+        return filePatternsMenuLength + BuiltInPatternsMenuLength + SettingsMenuLength;
+    }
 
 public:
     UIManager(FileManager &fileManager, RendererManager & rendererManager)

@@ -4,20 +4,17 @@
  * @author Shame Boi
  */
 
-#include <cstring>
 #include <honeylight/renderers/FileRenderer.h>
 
-bool FileRenderer::renderTo(display_buffer_t * const buffer) {
+bool FileRenderer::renderTo(DisplayBuffer * const buffer) {
     if (activePatternFrame == nullptr) {
         activePatternFrame = getPatternFrame(currentPatternFrame);
     }
 
-    if (!activePatternFrame->fadeNext || getPatternFrameCount() <= 1) {
-        memcpy(buffer->getBuffer(),
-               activePatternFrame->data.getConstBuffer(),
-               display_buffer_t::length * sizeof(color_t));
+    if (!activePatternFrame->isFadeNext() || getPatternFrameCount() <= 1) {
+        *buffer = activePatternFrame->getData();
     } else {
-        frame_t const * nextFrame;
+        Frame const * nextFrame;
         if ((currentPatternFrame + 1) >= getPatternFrameCount()) {
             nextFrame = getPatternFrame(0);
         } else {
@@ -29,7 +26,7 @@ bool FileRenderer::renderTo(display_buffer_t * const buffer) {
     }
 
     ++currentTransitionFrame;
-    if (currentTransitionFrame > activePatternFrame->transitionFrames) {
+    if (currentTransitionFrame > activePatternFrame->getTransitionFrames()) {
         currentTransitionFrame = 0;
         currentPatternFrame++;
         if (currentPatternFrame >= getPatternFrameCount()) {
@@ -40,14 +37,14 @@ bool FileRenderer::renderTo(display_buffer_t * const buffer) {
     return true;
 }
 
-bool FileRenderer::renderFadeTransitionFrame(frame_t const * const fadeFromPatternFrame,
-                                             frame_t const * const fadeToPatternFrame,
-                                             display_buffer_t * const dest) const {
+bool FileRenderer::renderFadeTransitionFrame(Frame const * const fadeFromPatternFrame,
+                                             Frame const * const fadeToPatternFrame,
+                                             DisplayBuffer * const dest) const {
     float const percentFaded = static_cast<float>(currentTransitionFrame) /
-                               static_cast<float>(fadeFromPatternFrame->transitionFrames);
-    for (size_t pixelIndex = 0; pixelIndex < display_buffer_t::length; ++pixelIndex) {
-        color_t const * fadeFrom = fadeFromPatternFrame->data.getConstBuffer() + pixelIndex;
-        color_t const * fadeTo = fadeToPatternFrame->data.getConstBuffer() + pixelIndex;
+                               static_cast<float>(fadeFromPatternFrame->getTransitionFrames());
+    for (size_t pixelIndex = 0; pixelIndex < DisplayBuffer::Length; ++pixelIndex) {
+        color_t const * const fadeFrom = fadeFromPatternFrame->getData().getConstBuffer() + pixelIndex;
+        color_t const * const fadeTo = fadeToPatternFrame->getData().getConstBuffer() + pixelIndex;
         color_delta_t delta = fadeTo->delta(*fadeFrom);
         delta.brightness *= percentFaded;
         delta.red *= percentFaded;

@@ -9,19 +9,20 @@
 #include <cstddef>
 
 #include <honeylight/display_types.h>
+#include <honeylight/data/Frame.h>
 #include <honeylight/renderers/Renderer.h>
 
 class FileRenderer : public Renderer {
 private:
     uint32_t currentPatternFrame = 0;
     uint32_t currentTransitionFrame = 0;
-    frame_t patternFrames[HONEYLIGHT_MAX_PATTERN_FRAMES];
+    Frame patternFrames[HONEYLIGHT_MAX_PATTERN_FRAMES];
     size_t patternFrameCount = 0;
-    frame_t const * activePatternFrame = nullptr;
+    Frame const * activePatternFrame = nullptr;
 
-    bool renderFadeTransitionFrame(frame_t const * fadeFromPatternFrame,
-                                   frame_t const * fadeToPatternFrame,
-                                   display_buffer_t * dest) const;
+    bool renderFadeTransitionFrame(Frame const * fadeFromPatternFrame,
+                                   Frame const * fadeToPatternFrame,
+                                   DisplayBuffer * dest) const;
 public:
 
     ~FileRenderer() override = default;
@@ -44,14 +45,14 @@ public:
         patternFrameCount = val;
     }
 
-    inline frame_t * getPatternFrame(uint32_t const index) {
+    inline Frame * getPatternFrame(uint32_t const index) {
         if (index >= HONEYLIGHT_MAX_PATTERN_FRAMES) {
             return nullptr;
         }
         return &patternFrames[index];
     }
 
-    bool renderTo(display_buffer_t *buffer) override;
+    bool renderTo(DisplayBuffer *buffer) override;
 
     const char *getName() const override {
         return "File";

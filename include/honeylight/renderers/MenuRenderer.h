@@ -11,19 +11,54 @@
 #include <honeylight/renderers/Font.h>
 
 class MenuRenderer : public Renderer {
-    color_t const BackgroundColor = Color::Black;
-    color_t const MenuItemColor = Color::Blue;
-    color_t const SelectedItemColor = Color::Purple;
+    constexpr static size_t const MenuWidth = HONEYLIGHT_DISPLAY_COLS / 2;
+    constexpr static size_t const PatternMenuHeight = 2;
+    constexpr static size_t const PatternMenuRow = 0;
+    constexpr static size_t const BuiltInMenuHeight = 2;
+    constexpr static size_t const BuiltInMenuRow = 2;
 
-    size_t totalEntries = 0;
+    static constexpr size_t getMenuRowWidth(size_t const row) {
+        switch (row) {
+            case 0:
+            case 4:
+            default:
+                return MenuWidth - 2;
+
+            case 1:
+            case 3:
+                return MenuWidth - 1;
+
+            case 2:
+                return MenuWidth;
+        }
+    }
+
+    color_t const BackgroundColor = Color::Black;
+    color_t const FilePatternMenuItemColor = Color::Blue;
+    color_t const BuiltInMenuItemColor = Color::Cyan;
+    color_t const SettingsMenuItemColor = Color::Green;
+    color_t const SelectedItemColor = Color::Violet;
+
+    size_t filePatternEntries = 0;
+    size_t builtInEntries = 0;
     size_t highlightedEntry = 0;
+    char displayedChar = '\0';
+
 public:
     MenuRenderer() = default;
 
     ~MenuRenderer() override = default;
 
-    inline void setTotalEntries(size_t const newTotalEntries) {
-        totalEntries = newTotalEntries;
+    inline void setDisplayedChar(char const newDisplayedChar) {
+        displayedChar = newDisplayedChar;
+    }
+
+    inline void setFilePatternEntries(size_t const newFilePatternEntries) {
+        filePatternEntries = newFilePatternEntries;
+    }
+
+    inline void setBuiltInEntries(size_t const newBuiltInEntries) {
+        builtInEntries = newBuiltInEntries;
     }
 
     inline void setHighlightedEntry(size_t const newHighlightedEntry) {
@@ -34,7 +69,7 @@ public:
         return "Menu";
     }
 
-    bool renderTo(display_buffer_t * buffer) override;
+    bool renderTo(DisplayBuffer * buffer) override;
 };
 
 

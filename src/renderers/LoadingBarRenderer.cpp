@@ -6,7 +6,7 @@
 
 #include <honeylight/renderers/LoadingBarRenderer.h>
 
-bool LoadingBarRenderer::renderTo(display_buffer_t * const buffer) {
+bool LoadingBarRenderer::renderTo(DisplayBuffer * const buffer) {
     buffer->setAll(background);
 
     uint8_t const colorToCol = (HONEYLIGHT_DISPLAY_COLS * (percent / 100.0));

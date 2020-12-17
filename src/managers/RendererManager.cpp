@@ -47,62 +47,51 @@ void RendererManager::writeFrame() {
     display.write();
 }
 
-void RendererManager::showRenderer(Renderer * const renderer) {
-    previousRenderer = selectedRenderer;
+void RendererManager::showRenderer(RendererType const type, Renderer * const renderer) {
+    previousRendererType = selectedRendererType;
     selectedRenderer = renderer;
+    selectedRendererType = type;
     DBG("Selected Renderer: ");
     DBGLN(selectedRenderer->getName());
 }
 
 void RendererManager::showPreviousRenderer() {
-    if (previousRenderer == nullptr) {
+    if (previousRendererType == RendererType::None) {
         return;
     }
-    showRenderer(previousRenderer);
+    showRenderer(previousRendererType);
 }
 
 void RendererManager::setDefaultRenderer(RendererType const type) {
-    switch(type) {
-        case RendererType::File:
-            defaultRenderer = &fileRenderer;
-            break;
-        case RendererType::LoadingBar:
-            defaultRenderer = &loadingBarRenderer;
-            break;
-        case RendererType::Rainbow:
-            defaultRenderer = &rainbowRenderer;
-            break;
-        case RendererType::BlankWhite:
-            defaultRenderer = &blankWhiteRenderer;
-            break;
-        case RendererType::Menu:
-            defaultRenderer = &menuRenderer;
-            break;
-        case RendererType::FontTest:
-            defaultRenderer = &fontTestRenderer;
-            break;
+    if (type == RendererType::None) {
+        return;
     }
+    defaultRendererType = type;
 }
 
 void RendererManager::showRenderer(RendererType const type) {
     switch(type) {
         case RendererType::File:
-            showFileRenderer();
+            fileRenderer.reset();
+            showRenderer(type, &fileRenderer);
             break;
         case RendererType::LoadingBar:
-            showLoadingBarRenderer();
+            showRenderer(type, &loadingBarRenderer);
             break;
         case RendererType::Rainbow:
-            showRainbowRenderer();
+            showRenderer(type, &rainbowRenderer);
             break;
         case RendererType::BlankWhite:
-            showBlankWhiteRenderer();
+            showRenderer(type, &blankWhiteRenderer);
             break;
         case RendererType::Menu:
-            showMenuRenderer();
+            showRenderer(type, &menuRenderer);
             break;
         case RendererType::FontTest:
-            showFontTestRenderer();
+            showRenderer(type, &fontTestRenderer);
+            break;
+        case RendererType::None:
+            showDefaultRenderer();
             break;
     }
 }

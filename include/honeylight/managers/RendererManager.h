@@ -18,6 +18,7 @@
 #include <honeylight/renderers/FontTestRenderer.h>
 
 enum class RendererType {
+    None,
     File,
     LoadingBar,
     Rainbow,
@@ -37,9 +38,10 @@ private:
     MenuRenderer menuRenderer;
     FontTestRenderer fontTestRenderer;
 
-    Renderer * previousRenderer = nullptr;
     Renderer * selectedRenderer = nullptr;
-    Renderer * defaultRenderer = &blankWhiteRenderer;
+    RendererType previousRendererType = RendererType::None;
+    RendererType selectedRendererType = RendererType::None;
+    RendererType defaultRendererType = RendererType::BlankWhite;
     uint32_t lastFrameMillis = 0;
     bool errorWithRenderer = false;
 
@@ -47,7 +49,7 @@ private:
 
     void writeFrame();
 
-    void showRenderer(Renderer * renderer);
+    void showRenderer(RendererType type, Renderer * renderer);
 
 public:
     RendererManager();
@@ -67,32 +69,39 @@ public:
     }
 
     inline void showFileRenderer() {
-        fileRenderer.reset();
-        showRenderer(&fileRenderer);
+        showRenderer(RendererType::File);
     }
 
     inline void showLoadingBarRenderer() {
-        showRenderer(&loadingBarRenderer);
+        showRenderer(RendererType::LoadingBar);
     }
 
     inline void showRainbowRenderer() {
-        showRenderer(&rainbowRenderer);
+        showRenderer(RendererType::Rainbow);
     }
 
     inline void showBlankWhiteRenderer() {
-        showRenderer(&blankWhiteRenderer);
+        showRenderer(RendererType::BlankWhite);
     }
 
     inline void showMenuRenderer() {
-        showRenderer(&menuRenderer);
+        showRenderer(RendererType::Menu);
     }
 
     inline void showFontTestRenderer() {
-        showRenderer(&fontTestRenderer);
+        showRenderer(RendererType::FontTest);
     }
 
     inline void showDefaultRenderer() {
-        showRenderer(defaultRenderer);
+        showRenderer(defaultRendererType);
+    }
+
+    RendererType getActiveRenderer() const {
+        return selectedRendererType;
+    }
+
+    RendererType getPreviousRenderer() const {
+        return selectedRendererType;
     }
 
     void setDefaultRenderer(RendererType type);

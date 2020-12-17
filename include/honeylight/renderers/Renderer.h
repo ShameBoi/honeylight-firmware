@@ -5,8 +5,7 @@
  */
 #pragma once
 
-
-#include <honeylight/display_types.h>
+#include <honeylight/data/DisplayBuffer.h>
 
 class Renderer {
 public:
@@ -16,7 +15,7 @@ public:
 
     virtual char const * getName() const = 0;
 
-    virtual bool renderTo(display_buffer_t * buffer) = 0;
+    virtual bool renderTo(DisplayBuffer * buffer) = 0;
 };
 
 

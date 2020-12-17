@@ -15,7 +15,7 @@ public:
 
     ~RainbowRenderer() override = default;
 
-    bool renderTo(display_buffer_t * buffer) override;
+    bool renderTo(DisplayBuffer * buffer) override;
 
     const char *getName() const override {
         return "Rainbow";

@@ -22,7 +22,7 @@ void UIManager::begin() {
     pinMode(Pin::EncoderSwitch, INPUT);
     interruptContext = this;
     attachInterrupt(digitalPinToInterrupt(Pin::EncoderSwitch), &onButtonPress, FALLING);
-    menuLength = fileManager->getPatternCount();
+    filePatternsMenuLength = fileManager->getPatternCount();
     menuIndex = fileManager->getActivePatternIndex();
 }
 
@@ -54,9 +54,27 @@ void UIManager::work() {
 
 void UIManager::openMenu() {
     menuActive = true;
-    menuLength = fileManager->getPatternCount();
-    menuIndex = fileManager->getActivePatternIndex();
-    rendererManager->getMenuRenderer().setTotalEntries(menuLength);
+    filePatternsMenuLength = fileManager->getPatternCount();
+    switch (rendererManager->getActiveRenderer()) {
+        case RendererType::File:
+            menuIndex = fileManager->getActivePatternIndex();
+            break;
+
+        case RendererType::Menu:
+        case RendererType::LoadingBar:
+        case RendererType::FontTest:
+        case RendererType::Rainbow:
+        case RendererType::None:
+            menuIndex = filePatternsMenuLength;
+            break;
+
+        case RendererType::BlankWhite:
+            menuIndex = filePatternsMenuLength + 1;
+            break;
+    }
+    rendererManager->getMenuRenderer().setFilePatternEntries(filePatternsMenuLength);
+    rendererManager->getMenuRenderer().setBuiltInEntries(BuiltInPatternsMenuLength);
+    rendererManager->getMenuRenderer().setDisplayedChar(getCharForMenuEntry());
     rendererManager->getMenuRenderer().setHighlightedEntry(menuIndex);
     rendererManager->showMenuRenderer();
 }
@@ -66,11 +84,42 @@ void UIManager::reset() {
     menuActive = false;
     knobMoved = 0;
     previousKnobPosition = knob.read();
-    menuIndex = fileManager->getActivePatternIndex();
+    switch (rendererManager->getActiveRenderer()) {
+        case RendererType::File:
+            menuIndex = fileManager->getActivePatternIndex();
+            break;
+
+        case RendererType::Menu:
+        case RendererType::LoadingBar:
+        case RendererType::FontTest:
+        case RendererType::Rainbow:
+        case RendererType::None:
+            menuIndex = filePatternsMenuLength;
+            break;
+
+        case RendererType::BlankWhite:
+            menuIndex = filePatternsMenuLength + 1;
+            break;
+    }
 }
 
 void UIManager::handleButtonPressed() {
-    fileManager->loadPattern(menuIndex);
+    if (menuIndex < filePatternsMenuLength) {
+        fileManager->loadPattern(menuIndex);
+    } else if (menuIndex < (BuiltInPatternsMenuLength + filePatternsMenuLength)) {
+        switch (menuIndex - filePatternsMenuLength) {
+            default:
+            case 0:
+                rendererManager->showRainbowRenderer();
+                break;
+
+            case 1:
+                rendererManager->showBlankWhiteRenderer();
+                break;
+        }
+    } else {
+        // TODO: Handle settings menu
+    }
     reset();
 }
 
@@ -80,13 +129,14 @@ void UIManager::handleKnobMoved() {
         openMenu();
     }
     previousKnobPosition = knob.read();
-    if (menuLength > 1) {
+    size_t const totalMenuLength = getTotalMenuLength();
+    if (totalMenuLength > 1) {
         if (knobMoved > 0) {
-            menuIndex = (menuIndex + knobMoved) % menuLength;
+            menuIndex = (menuIndex + knobMoved) % totalMenuLength;
         } else {
             auto const absKnobMoved = static_cast<size_t>(-knobMoved);
             if (menuIndex < absKnobMoved) {
-                menuIndex = menuLength - (absKnobMoved - menuIndex);
+                menuIndex = totalMenuLength - (absKnobMoved - menuIndex);
             } else {
                 menuIndex -= absKnobMoved;
             }
@@ -96,10 +146,30 @@ void UIManager::handleKnobMoved() {
     }
     knobMoved = 0;
     rendererManager->getMenuRenderer().setHighlightedEntry(menuIndex);
+    rendererManager->getMenuRenderer().setDisplayedChar(getCharForMenuEntry());
 }
 
 void UIManager::handleMenuTimeout() {
     DBGLN("Menu timeout");
     reset();
     rendererManager->showPreviousRenderer();
+}
+
+char UIManager::getCharForMenuEntry() const {
+    if (menuIndex < filePatternsMenuLength) {
+        return 'P';
+    }
+
+    if ((menuIndex - filePatternsMenuLength) < BuiltInPatternsMenuLength) {
+        switch ((menuIndex - filePatternsMenuLength)) {
+            default:
+            case 0:
+                return 'R';
+
+            case 1:
+                return 'W';
+        }
+    }
+
+    return 'S';
 }

@@ -4,6 +4,7 @@
  * @author Shame Boi
  */
 
+#include <honeylight/display_types.h>
 #include <honeylight/Display.h>
 
 void Display::startDataFrame() {
@@ -23,5 +24,5 @@ void Display::end() {
 
 void Display::write()  {
     startDataFrame();
-    spi->transfer(live, nullptr, sizeof(color_t) * display_buffer_t::length);
+    spi->transfer(live->getConstBuffer(), nullptr, DisplayBuffer::LengthInBytes);
 }

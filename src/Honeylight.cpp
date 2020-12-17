@@ -21,11 +21,10 @@ void Honeylight::init() {
     #endif
     #endif
 
+    rendererManager.setDefaultRenderer(RendererType::FontTest);
     rendererManager.begin();
     fileManager.begin();
     uiManager.begin();
-
-    rendererManager.showFontTestRenderer();
 }
 
 void Honeylight::loop() {

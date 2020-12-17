@@ -6,7 +6,7 @@
 
 #include <honeylight/renderers/BlankWhiteRenderer.h>
 
-bool BlankWhiteRenderer::renderTo(display_buffer_t * const buffer) {
+bool BlankWhiteRenderer::renderTo(DisplayBuffer * const buffer) {
     buffer->setAll(Color::White);
     return true;
 }

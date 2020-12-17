@@ -13,6 +13,7 @@
 
 #include <honeylight/config.h>
 #include <honeylight/display_types.h>
+#include <honeylight/data/Frame.h>
 #include <honeylight/managers/Manager.h>
 #include <honeylight/managers/RendererManager.h>
 
@@ -63,7 +64,7 @@ private:
 
     State parsePattern();
 
-    bool parseFrame(File & entry, frame_t * dest);
+    bool parseFrame(File & entry, Frame * dest);
 
     bool processPossibleFrameFile(File & file);
 

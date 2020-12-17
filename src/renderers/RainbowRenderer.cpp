@@ -10,7 +10,7 @@
 #include <honeylight/util.h>
 #include <honeylight/renderers/RainbowRenderer.h>
 
-bool RainbowRenderer::renderTo(display_buffer_t *const buffer) {
+bool RainbowRenderer::renderTo(DisplayBuffer *const buffer) {
     uint8_t const time = millis() >> 4U;
 
     for(uint16_t col = 0; col < HONEYLIGHT_DISPLAY_COLS; col++) {

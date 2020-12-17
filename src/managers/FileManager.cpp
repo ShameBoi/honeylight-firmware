@@ -187,14 +187,14 @@ bool FileManager::processPossibleFrameFile(File & file) {
         return false;
     }
 
-    frame_t * const frame = renderer.getPatternFrame(frameNumber - 1);
+    Frame * const frame = renderer.getPatternFrame(frameNumber - 1);
     if (frame == nullptr) {
         return false;
     }
 
-    frame->frameNumber = frameNumber;
-    frame->transitionFrames = transitionFrames;
-    frame->fadeNext = isFadeNext;
+    frame->setFrameNumber(frameNumber);
+    frame->setTransitionFrames(transitionFrames);
+    frame->setFadeNext(isFadeNext);
 
     if (!parseFrame(file, frame)) {
         return false;
@@ -207,23 +207,27 @@ bool FileManager::processPossibleFrameFile(File & file) {
     DBG("Loaded frame: ");
     DBG(entryName);
     DBG(" - { ");
-    DBG(frame->frameNumber);
+    DBG(frame->getFrameNumber());
     DBG(", ");
-    DBG(frame->transitionFrames);
+    DBG(frame->getTransitionFrames());
     DBG(", ");
-    DBG(frame->fadeNext ? 'F' : 'N');
+    DBG(frame->isFadeNext() ? 'F' : 'N');
     DBGLN(" }");
     return true;
 }
 
-bool FileManager::parseFrame(File & entry, frame_t * const dest) {
+bool FileManager::parseFrame(File & entry, Frame * const dest) {
     DBG("Parsing frame file: ");
     DBGLN(entry.name());
 
     size_t width, height;
     static ImageReader imageReader;
 
-    if (imageReader.readBMP(decodedFileBuff, sizeof(decodedFileBuff) / sizeof(*decodedFileBuff), &width, &height, entry)) {
+    if (imageReader.readBMP(decodedFileBuff,
+                            sizeof(decodedFileBuff) / sizeof(*decodedFileBuff),
+                            &width,
+                            &height,
+                            entry)) {
         DBGLN("Error decoding BMP");
         return false;
     }
@@ -234,7 +238,7 @@ bool FileManager::parseFrame(File & entry, frame_t * const dest) {
         size_t const rowYOffset = row * ROW_SPACING;
         size_t const rowStart = (width * (rowYOffset + 2)) + rowXOffset;
         size_t pixelStartByte;
-        for (size_t col = 0; col < display_buffer_t::getRowLength(row); ++col) {
+        for (size_t col = 0; col < DisplayBuffer::getRowLength(row); ++col) {
             pixelStartByte = (rowStart + (col * COLUMN_SPACING));
             if (pixelStartByte > (width * height * sizeof(rgba_t))) {
                 DBGLN("Calculated position larger than buffer");
@@ -246,7 +250,7 @@ bool FileManager::parseFrame(File & entry, frame_t * const dest) {
             uint8_t const blue = decodedFileBuff[pixelStartByte].blue;
             uint8_t const alpha = decodedFileBuff[pixelStartByte].alpha;
             uint8_t const brightness = (alpha / 255.0) * HONEYLIGHT_MAX_BRIGHTNESS;
-            dest->data.set(row, col, color_t(brightness, red, green, blue));
+            dest->getData().set(row, col, color_t(brightness, red, green, blue));
         }
     }
 

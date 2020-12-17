@@ -5,6 +5,8 @@
  */
 #pragma once
 
+#include <cstdint>
+
 #ifndef HONEYLIGHT_FPS
 #define HONEYLIGHT_FPS 30
 #endif
@@ -38,6 +40,4 @@
 #define HONEYLIGHT_DISPLAY_COLS 16
 #endif
 
-
 constexpr uint16_t const MillisecondsPerFrame = (1.0 / static_cast<float>(HONEYLIGHT_FPS)) * 1000U;
-

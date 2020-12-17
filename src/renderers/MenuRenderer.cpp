@@ -6,15 +6,33 @@
 
 #include <honeylight/renderers/MenuRenderer.h>
 
-bool MenuRenderer::renderTo(display_buffer_t *const buffer) {
+bool MenuRenderer::renderTo(DisplayBuffer *const buffer) {
     buffer->setAll(BackgroundColor);
 
-    for (size_t iter = 0; iter < totalEntries && iter < display_buffer_t::length; ++iter) {
-        if (iter == highlightedEntry) {
-            buffer->set(iter, SelectedItemColor);
-        } else {
-            buffer->set(iter, MenuItemColor);
+    for (size_t rowIndex = 0, colIndex = 0, iter = 0;
+         iter < filePatternEntries && rowIndex < PatternMenuHeight;
+         ++iter) {
+        buffer->set(rowIndex + PatternMenuRow,
+                    colIndex,
+                    iter == highlightedEntry ? SelectedItemColor : FilePatternMenuItemColor);
+        ++colIndex;
+        if (colIndex >= getMenuRowWidth(rowIndex)) {
+            ++rowIndex;
+            colIndex = 0;
         }
     }
-    return true;
+
+    for (size_t rowIndex = 0, colIndex = 0, iter = 0;
+         iter < builtInEntries && rowIndex < BuiltInMenuHeight;
+         ++iter) {
+        buffer->set(rowIndex + BuiltInMenuRow,
+                    colIndex,
+                    (iter + filePatternEntries) == highlightedEntry ? SelectedItemColor : BuiltInMenuItemColor);
+        ++colIndex;
+        if (colIndex >= getMenuRowWidth(rowIndex)) {
+            ++rowIndex;
+            colIndex = 0;
+        }
+    }
+    return Font::renderCharacter(displayedChar, SelectedItemColor, MenuWidth, buffer);
 }
