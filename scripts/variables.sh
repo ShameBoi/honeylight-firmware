@@ -19,6 +19,8 @@ declare -A buildNumericVariables=(
 
 declare -A buildFlags=(
     ["HONEYLIGHT_DEBUG"]=1
+    ["HONEYLIGHT_STARTUP_WAIT"]=0
+    ["HONEYLIGHT_SHOW_FONT_TEST"]=0
 );
 
 export buildStringVariables buildNumericVariables buildFlags;

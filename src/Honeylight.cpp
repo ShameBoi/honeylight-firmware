@@ -21,7 +21,11 @@ void Honeylight::init() {
     #endif
     #endif
 
+    #ifdef HONEYLIGHT_SHOW_FONT_TEST
     rendererManager.setDefaultRenderer(RendererType::FontTest);
+    #else
+    rendererManager.setDefaultRenderer(RendererType::Rainbow);
+    #endif
     rendererManager.begin();
     fileManager.begin();
     uiManager.begin();

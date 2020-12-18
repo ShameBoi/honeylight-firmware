@@ -14,7 +14,9 @@ for key in "${!buildNumericVariables[@]}"; do
 done;
 
 for key in "${!buildFlags[@]}"; do
-    echo -n "-D""$key""=""${buildFlags[$key]}"" ";
+    if [ "${buildFlags[$key]}" -eq 1 ]; then
+        echo -n "-D""$key"" ";
+    fi
 done;
 
 echo;
