@@ -18,6 +18,7 @@ declare -A buildNumericVariables=(
 );
 
 declare -A buildFlags=(
+    ["HONEYLIGHT_DEBUG"]=1
 );
 
 export buildStringVariables buildNumericVariables buildFlags;
