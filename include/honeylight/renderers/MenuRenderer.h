@@ -9,13 +9,12 @@
 
 #include <honeylight/renderers/Renderer.h>
 #include <honeylight/renderers/Font.h>
+#include <honeylight/menus/FileMenu.h>
+#include <honeylight/menus/BuiltInMenu.h>
 
 class MenuRenderer : public Renderer {
     constexpr static size_t const MenuWidth = HONEYLIGHT_DISPLAY_COLS / 2;
-    constexpr static size_t const PatternMenuHeight = 2;
     constexpr static size_t const PatternMenuRow = 0;
-    constexpr static size_t const BuiltInMenuHeight = 2;
-    constexpr static size_t const BuiltInMenuRow = 2;
 
     static constexpr size_t getMenuRowWidth(size_t const row) {
         switch (row) {
@@ -34,14 +33,15 @@ class MenuRenderer : public Renderer {
     }
 
     color_t const BackgroundColor = Color::Black;
-    color_t const FilePatternMenuItemColor = Color::Blue;
-    color_t const BuiltInMenuItemColor = Color::Cyan;
-    color_t const SettingsMenuItemColor = Color::Green;
-    color_t const SelectedItemColor = Color::Violet;
+    Menu::Type activeMenu = Menu::Type::FilePatterns;
+    FileMenu fileMenu;
+    BuiltInMenu builtInMenu;
 
-    size_t filePatternEntries = 0;
-    size_t builtInEntries = 0;
-    size_t highlightedEntry = 0;
+    Menu * menus[2] = {
+            &fileMenu,
+            &builtInMenu
+    };
+
     char displayedChar = '\0';
 
 public:
@@ -49,20 +49,20 @@ public:
 
     ~MenuRenderer() override = default;
 
+    inline FileMenu & getFileMenu() {
+        return fileMenu;
+    }
+
+    inline BuiltInMenu & getBuiltInMenu() {
+        return builtInMenu;
+    }
+
+    inline void setActiveMenu(Menu::Type const menu) {
+        activeMenu = menu;
+    }
+
     inline void setDisplayedChar(char const newDisplayedChar) {
         displayedChar = newDisplayedChar;
-    }
-
-    inline void setFilePatternEntries(size_t const newFilePatternEntries) {
-        filePatternEntries = newFilePatternEntries;
-    }
-
-    inline void setBuiltInEntries(size_t const newBuiltInEntries) {
-        builtInEntries = newBuiltInEntries;
-    }
-
-    inline void setHighlightedEntry(size_t const newHighlightedEntry) {
-        highlightedEntry = newHighlightedEntry;
     }
 
     const char *getName() const override {

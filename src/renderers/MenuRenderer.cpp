@@ -9,30 +9,37 @@
 bool MenuRenderer::renderTo(DisplayBuffer *const buffer) {
     buffer->setAll(BackgroundColor);
 
-    for (size_t rowIndex = 0, colIndex = 0, iter = 0;
-         iter < filePatternEntries && rowIndex < PatternMenuHeight;
-         ++iter) {
-        buffer->set(rowIndex + PatternMenuRow,
-                    colIndex,
-                    iter == highlightedEntry ? SelectedItemColor : FilePatternMenuItemColor);
-        ++colIndex;
-        if (colIndex >= getMenuRowWidth(rowIndex)) {
-            ++rowIndex;
-            colIndex = 0;
+    size_t row = PatternMenuRow;
+    color_t activeColor = Color::Violet;
+    for (Menu * curMenu : menus) {
+        for (size_t colIndex = 0; colIndex < curMenu->getCurrentPageSize(); ++colIndex) {
+            if (curMenu->getType() == activeMenu) {
+                activeColor = curMenu->getSelectedItemColor();
+                buffer->set(row,
+                            colIndex,
+                            colIndex == curMenu->getCurrentPageIndex() ? activeColor : curMenu->getMenuColor());
+            } else {
+                buffer->set(row,
+                            colIndex,
+                            curMenu->getMenuColor());
+            }
         }
+
+        if (curMenu->isPaged() && curMenu->getTotalPages() > 1) {
+            for (size_t colIndex = 0; colIndex < curMenu->getTotalPages(); ++colIndex) {
+                if (curMenu->getType() == activeMenu) {
+                    buffer->set(row + 1,
+                                colIndex,
+                                colIndex == curMenu->getCurrentPage() ? activeColor : curMenu->getMenuColor());
+                } else {
+                    buffer->set(row + 1,
+                                colIndex,
+                                curMenu->getMenuColor());
+                }
+            }
+        }
+        row += 2;
     }
 
-    for (size_t rowIndex = 0, colIndex = 0, iter = 0;
-         iter < builtInEntries && rowIndex < BuiltInMenuHeight;
-         ++iter) {
-        buffer->set(rowIndex + BuiltInMenuRow,
-                    colIndex,
-                    (iter + filePatternEntries) == highlightedEntry ? SelectedItemColor : BuiltInMenuItemColor);
-        ++colIndex;
-        if (colIndex >= getMenuRowWidth(rowIndex)) {
-            ++rowIndex;
-            colIndex = 0;
-        }
-    }
-    return Font::renderCharacter(displayedChar, SelectedItemColor, MenuWidth, buffer);
+    return Font::renderCharacter(displayedChar, activeColor, MenuWidth, buffer);
 }

@@ -7,6 +7,16 @@
 
 #include <honeylight/data/DisplayBuffer.h>
 
+enum class RendererType {
+    None,
+    File,
+    LoadingBar,
+    Rainbow,
+    BlankWhite,
+    Menu,
+    FontTest
+};
+
 class Renderer {
 public:
     Renderer() = default;

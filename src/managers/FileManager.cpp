@@ -143,8 +143,7 @@ FileManager::State FileManager::parsePattern() {
     }
     FileRenderer &renderer = rendererManager->getFileRenderer();
     File patternFrameToParse;
-    if ((patternFrameToParse = patternToParse.openNextFile()) &&
-        renderer.getPatternFrameCount() < HONEYLIGHT_MAX_PATTERN_FRAMES) {
+    if ((patternFrameToParse = patternToParse.openNextFile())) {
         if (!patternFrameToParse.isDirectory() && hasExtension(patternFrameToParse, BMP_EXTENSION)) {
             processPossibleFrameFile(patternFrameToParse);
             ++checkedPossiblePatternFiles;

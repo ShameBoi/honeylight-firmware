@@ -21,9 +21,11 @@ void UIManager::begin() {
     knob.init();
     pinMode(Pin::EncoderSwitch, INPUT);
     interruptContext = this;
+    fileRenderer = &rendererManager->getFileRenderer();
+    menuRenderer = &rendererManager->getMenuRenderer();
+    fileMenu = &menuRenderer->getFileMenu();
+    builtInMenu = &menuRenderer->getBuiltInMenu();
     attachInterrupt(digitalPinToInterrupt(Pin::EncoderSwitch), &onButtonPress, FALLING);
-    filePatternsMenuLength = fileManager->getPatternCount();
-    menuIndex = fileManager->getActivePatternIndex();
 }
 
 bool UIManager::hasWork() {
@@ -54,28 +56,25 @@ void UIManager::work() {
 
 void UIManager::openMenu() {
     menuActive = true;
-    filePatternsMenuLength = fileManager->getPatternCount();
+    fileMenu->init(fileManager);
     switch (rendererManager->getActiveRenderer()) {
         case RendererType::File:
-            menuIndex = fileManager->getActivePatternIndex();
+            activeMenu = Menu::Type::FilePatterns;
             break;
 
         case RendererType::Menu:
         case RendererType::LoadingBar:
         case RendererType::FontTest:
+        case RendererType::BlankWhite:
         case RendererType::Rainbow:
         case RendererType::None:
-            menuIndex = filePatternsMenuLength;
-            break;
-
-        case RendererType::BlankWhite:
-            menuIndex = filePatternsMenuLength + 1;
+            activeMenu = Menu::Type::BuiltIn;
             break;
     }
-    rendererManager->getMenuRenderer().setFilePatternEntries(filePatternsMenuLength);
-    rendererManager->getMenuRenderer().setBuiltInEntries(BuiltInPatternsMenuLength);
-    rendererManager->getMenuRenderer().setDisplayedChar(getCharForMenuEntry());
-    rendererManager->getMenuRenderer().setHighlightedEntry(menuIndex);
+
+    activeMenuPtr = getMenuPtrForActiveMenu();
+    menuRenderer->setActiveMenu(activeMenu);
+    menuRenderer->setDisplayedChar(activeMenuPtr->getMenuDisplayCharacter());
     rendererManager->showMenuRenderer();
 }
 
@@ -84,42 +83,20 @@ void UIManager::reset() {
     menuActive = false;
     knobMoved = 0;
     previousKnobPosition = knob.read();
-    switch (rendererManager->getActiveRenderer()) {
-        case RendererType::File:
-            menuIndex = fileManager->getActivePatternIndex();
-            break;
-
-        case RendererType::Menu:
-        case RendererType::LoadingBar:
-        case RendererType::FontTest:
-        case RendererType::Rainbow:
-        case RendererType::None:
-            menuIndex = filePatternsMenuLength;
-            break;
-
-        case RendererType::BlankWhite:
-            menuIndex = filePatternsMenuLength + 1;
-            break;
-    }
 }
 
 void UIManager::handleButtonPressed() {
-    if (menuIndex < filePatternsMenuLength) {
-        fileManager->loadPattern(menuIndex);
-    } else if (menuIndex < (BuiltInPatternsMenuLength + filePatternsMenuLength)) {
-        switch (menuIndex - filePatternsMenuLength) {
-            default:
-            case 0:
-                rendererManager->showRainbowRenderer();
-                break;
+    switch (activeMenu) {
+        case Menu::Type::FilePatterns:
+        default:
+            fileManager->loadPattern(fileMenu->getIndex());
+            break;
 
-            case 1:
-                rendererManager->showBlankWhiteRenderer();
-                break;
-        }
-    } else {
-        // TODO: Handle settings menu
+        case Menu::Type::BuiltIn:
+            rendererManager->showRenderer(builtInMenu->getSelectedRenderer());
+            break;
     }
+
     reset();
 }
 
@@ -129,47 +106,43 @@ void UIManager::handleKnobMoved() {
         openMenu();
     }
     previousKnobPosition = knob.read();
-    size_t const totalMenuLength = getTotalMenuLength();
-    if (totalMenuLength > 1) {
-        if (knobMoved > 0) {
-            menuIndex = (menuIndex + knobMoved) % totalMenuLength;
-        } else {
-            auto const absKnobMoved = static_cast<size_t>(-knobMoved);
-            if (menuIndex < absKnobMoved) {
-                menuIndex = totalMenuLength - (absKnobMoved - menuIndex);
+    if (knobMoved > 0) {
+        while (knobMoved > 0) {
+            if (activeMenuPtr->hasNext()) {
+                activeMenuPtr->next();
             } else {
-                menuIndex -= absKnobMoved;
+                do {
+                    activeMenu = static_cast<Menu::Type>((static_cast<uint8_t>(activeMenu) + 1) % 2);
+                    activeMenuPtr = getMenuPtrForActiveMenu();
+                } while (activeMenuPtr->getSize() <= 0);
+                activeMenuPtr->setIndex(0);
             }
+            --knobMoved;
         }
     } else {
-        menuIndex = 0;
+        auto absKnobMoved = static_cast<size_t>(-knobMoved);
+        while (absKnobMoved > 0) {
+            if (activeMenuPtr->hasPrevious()) {
+                activeMenuPtr->previous();
+            } else {
+                do {
+                    activeMenu = static_cast<Menu::Type>(static_cast<uint8_t>(activeMenu) == 0 ? 1 : (static_cast<uint8_t>(activeMenu) - 1));
+                    activeMenuPtr = getMenuPtrForActiveMenu();
+                } while (activeMenuPtr->getSize() <= 0);
+                if (activeMenuPtr->getSize() > 0) {
+                    activeMenuPtr->setIndex(activeMenuPtr->getSize() - 1);
+                }
+            }
+            --absKnobMoved;
+        }
     }
     knobMoved = 0;
-    rendererManager->getMenuRenderer().setHighlightedEntry(menuIndex);
-    rendererManager->getMenuRenderer().setDisplayedChar(getCharForMenuEntry());
+    menuRenderer->setActiveMenu(activeMenu);
+    menuRenderer->setDisplayedChar(activeMenuPtr->getMenuDisplayCharacter());
 }
 
 void UIManager::handleMenuTimeout() {
     DBGLN("Menu timeout");
     reset();
     rendererManager->showPreviousRenderer();
-}
-
-char UIManager::getCharForMenuEntry() const {
-    if (menuIndex < filePatternsMenuLength) {
-        return 'P';
-    }
-
-    if ((menuIndex - filePatternsMenuLength) < BuiltInPatternsMenuLength) {
-        switch ((menuIndex - filePatternsMenuLength)) {
-            default:
-            case 0:
-                return 'R';
-
-            case 1:
-                return 'W';
-        }
-    }
-
-    return 'S';
 }

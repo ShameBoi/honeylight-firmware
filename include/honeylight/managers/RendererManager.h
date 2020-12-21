@@ -17,16 +17,6 @@
 #include <honeylight/renderers/MenuRenderer.h>
 #include <honeylight/renderers/FontTestRenderer.h>
 
-enum class RendererType {
-    None,
-    File,
-    LoadingBar,
-    Rainbow,
-    BlankWhite,
-    Menu,
-    FontTest
-};
-
 class RendererManager : public Manager {
 private:
     Display display;

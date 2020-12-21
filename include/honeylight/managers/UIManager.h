@@ -13,13 +13,13 @@
 #include <honeylight/atomic.h>
 #include <honeylight/managers/Manager.h>
 #include <honeylight/managers/FileManager.h>
+#include <honeylight/menus/FileMenu.h>
+#include <honeylight/menus/BuiltInMenu.h>
 
 class UIManager : public Manager {
 private:
     constexpr static uint8_t const EncoderChannel = 1;
     constexpr static uint32_t const InputTimeoutMS = 5000U;
-    constexpr static size_t const BuiltInPatternsMenuLength = 2;
-    constexpr static size_t const SettingsMenuLength = 0;
 
     static UIManager *interruptContext;
 
@@ -28,6 +28,18 @@ private:
     FileManager *const fileManager;
 
     RendererManager *const rendererManager;
+
+    FileRenderer * fileRenderer = nullptr;
+
+    MenuRenderer * menuRenderer = nullptr;
+
+    FileMenu * fileMenu = nullptr;
+
+    BuiltInMenu * builtInMenu = nullptr;
+
+    Menu * activeMenuPtr = nullptr;
+
+    Menu::Type activeMenu = Menu::Type::FilePatterns;
 
     atomic_flag_t volatile buttonFlag;
 
@@ -41,17 +53,7 @@ private:
 
     int32_t knobMoved = 0;
 
-    size_t menuIndex = 0;
-
-    size_t filePatternsMenuLength = 0;
-
     uint32_t lastInputMillis = 0;
-
-    enum class MenuSection {
-        FilePatterns,
-        BuiltIn,
-        Settings
-    } menuSection = MenuSection::FilePatterns;
 
     void openMenu();
 
@@ -61,17 +63,22 @@ private:
         return menuActive && (millis() - lastInputMillis) > InputTimeoutMS;
     }
 
+    inline Menu * getMenuPtrForActiveMenu() {
+        switch (activeMenu) {
+            case Menu::Type::FilePatterns:
+                return fileMenu;
+
+            default:
+            case Menu::Type::BuiltIn:
+                return builtInMenu;
+        }
+    }
+
     void handleButtonPressed();
 
     void handleKnobMoved();
 
     void handleMenuTimeout();
-
-    char getCharForMenuEntry() const;
-
-    inline size_t getTotalMenuLength() const {
-        return filePatternsMenuLength + BuiltInPatternsMenuLength + SettingsMenuLength;
-    }
 
 public:
     UIManager(FileManager &fileManager, RendererManager & rendererManager)
