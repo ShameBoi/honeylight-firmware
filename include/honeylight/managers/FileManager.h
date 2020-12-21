@@ -42,6 +42,8 @@ private:
 
     static bool hasExtension(File & file, char const * extension);
 
+    static size_t getPossibleFrameFileCount(File & patternDirectory);
+
     enum class State {
         Error = 0,
         Idle,
@@ -59,6 +61,8 @@ private:
     rgba_t decodedFileBuff[HONEYLIGHT_IMAGE_BUFFER_SIZE / sizeof(rgba_t)] = {};
     File patternToParse;
     uint32_t loadStartMsec = 0;
+    size_t checkedPossiblePatternFiles = 0;
+    size_t possiblePatternFrames = 0;
 
     State doLoadPattern();
 
@@ -67,7 +71,6 @@ private:
     bool parseFrame(File & entry, Frame * dest);
 
     bool processPossibleFrameFile(File & file);
-
 
 public:
     explicit FileManager(RendererManager & rendererManager) : rendererManager(&rendererManager) {};

@@ -95,13 +95,10 @@ unsigned ImageReader::readBMP(rgba_t * const imageData,
     file.seek(pixelDataOffset);
     resetBuffer();
 
-    DBG("Loading BMP Data...");
     if (!preLoadBuffer(file)) {
         return -1;
     }
-    DBGLN(" Done.");
 
-    DBG("Reading BMP Data...");
     uint8_t error = 0;
     for(uint32_t y = 0; y < (*height); y++) {
         size_t bytesReadThisLine = 0;
@@ -143,7 +140,6 @@ unsigned ImageReader::readBMP(rgba_t * const imageData,
         }
     }
 
-    DBGLN(" Done.");
     return 0;
 }
 

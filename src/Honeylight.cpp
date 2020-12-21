@@ -26,6 +26,7 @@ void Honeylight::init() {
     #else
     rendererManager.setDefaultRenderer(RendererType::Rainbow);
     #endif
+
     rendererManager.begin();
     fileManager.begin();
     uiManager.begin();

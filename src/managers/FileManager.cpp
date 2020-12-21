@@ -64,8 +64,25 @@ size_t FileManager::getPatternCount() {
     return patternCount;
 }
 
-bool FileManager::hasExtension(File & file, char const *const extension) {
-    char const * const name = file.name();
+size_t FileManager::getPossibleFrameFileCount(File &patternDirectory) {
+    if (!patternDirectory) {
+        return 0;
+    }
+
+    size_t patternFrameCount = 0;
+    File curEntry;
+    while ((curEntry = patternDirectory.openNextFile())) {
+        if (!curEntry.isDirectory() && hasExtension(curEntry, BMP_EXTENSION)) {
+            ++patternFrameCount;
+        }
+        curEntry.close();
+    }
+    patternDirectory.rewindDirectory();
+    return patternFrameCount;
+}
+
+bool FileManager::hasExtension(File &file, char const *const extension) {
+    char const *const name = file.name();
     size_t extensionLength = strlen(extension);
     size_t nameLength = strlen(name);
     if (nameLength < extensionLength) {
@@ -93,12 +110,12 @@ FileManager::State FileManager::doLoadPattern() {
 
     bool found = false;
     size_t count = 0;
+    possiblePatternFrames = 0;
     File currentPattern;
     while ((currentPattern = root.openNextFile())) {
         if (currentPattern.isDirectory()) {
             if (activePatternIndex == count) {
                 rendererManager->getFileRenderer().setPatternFrameCount(0);
-                rendererManager->getLoadingBarRenderer().setPercent(25);
                 patternToParse = currentPattern;
                 found = true;
                 break;
@@ -110,6 +127,8 @@ FileManager::State FileManager::doLoadPattern() {
     root.rewindDirectory();
 
     if (found) {
+        possiblePatternFrames = getPossibleFrameFileCount(patternToParse);
+        checkedPossiblePatternFiles = 0;
         return State::ParsePattern;
     }
 
@@ -122,11 +141,15 @@ FileManager::State FileManager::parsePattern() {
     if (!patternToParse) {
         return State::Idle;
     }
-    FileRenderer & renderer = rendererManager->getFileRenderer();
+    FileRenderer &renderer = rendererManager->getFileRenderer();
     File patternFrameToParse;
-    if ((patternFrameToParse = patternToParse.openNextFile()) && renderer.getPatternFrameCount() < HONEYLIGHT_MAX_PATTERN_FRAMES) {
+    if ((patternFrameToParse = patternToParse.openNextFile()) &&
+        renderer.getPatternFrameCount() < HONEYLIGHT_MAX_PATTERN_FRAMES) {
         if (!patternFrameToParse.isDirectory() && hasExtension(patternFrameToParse, BMP_EXTENSION)) {
             processPossibleFrameFile(patternFrameToParse);
+            ++checkedPossiblePatternFiles;
+            rendererManager->getLoadingBarRenderer()
+                           .setPercent((checkedPossiblePatternFiles * 100) / possiblePatternFrames);
         }
         patternFrameToParse.close();
         return State::ParsePattern;
@@ -151,9 +174,9 @@ FileManager::State FileManager::parsePattern() {
     return State::Idle;
 }
 
-bool FileManager::processPossibleFrameFile(File & file) {
-    FileRenderer & renderer = rendererManager->getFileRenderer();
-    char const * entryName = file.name();
+bool FileManager::processPossibleFrameFile(File &file) {
+    FileRenderer &renderer = rendererManager->getFileRenderer();
+    char const *entryName = file.name();
     uint32_t frameNumber = 0, transitionFrames = 0;
     bool isFadeNext;
     char transitionModeChar = '\0';
@@ -187,7 +210,7 @@ bool FileManager::processPossibleFrameFile(File & file) {
         return false;
     }
 
-    Frame * const frame = renderer.getPatternFrame(frameNumber - 1);
+    Frame *const frame = renderer.getPatternFrame(frameNumber - 1);
     if (frame == nullptr) {
         return false;
     }
@@ -216,10 +239,7 @@ bool FileManager::processPossibleFrameFile(File & file) {
     return true;
 }
 
-bool FileManager::parseFrame(File & entry, Frame * const dest) {
-    DBG("Parsing frame file: ");
-    DBGLN(entry.name());
-
+bool FileManager::parseFrame(File &entry, Frame *const dest) {
     size_t width, height;
     static ImageReader imageReader;
 
@@ -232,7 +252,6 @@ bool FileManager::parseFrame(File & entry, Frame * const dest) {
         return false;
     }
 
-    DBG("Remapping pixels...");
     for (size_t row = 0; row < HONEYLIGHT_DISPLAY_ROWS; ++row) {
         size_t const rowXOffset = getXStartForRow(row);
         size_t const rowYOffset = row * ROW_SPACING;
@@ -253,8 +272,6 @@ bool FileManager::parseFrame(File & entry, Frame * const dest) {
             dest->getData().set(row, col, color_t(brightness, red, green, blue));
         }
     }
-
-    DBGLN(" Done.");
 
     return true;
 }
