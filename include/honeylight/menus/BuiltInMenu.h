@@ -50,6 +50,7 @@ public:
 
     inline void setIndex(size_t const newIndex) override {
         index = newIndex;
+        setSelectedBuiltInRenderer();
     }
 
     inline color_t const &getMenuColor() const override {
